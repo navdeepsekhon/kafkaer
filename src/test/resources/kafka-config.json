@@ -1,0 +1,14 @@
+{
+  "topics": [
+    {
+      "name": "withSuffix-${topic.suffix}",
+      "partitions": 3,
+      "replicationFactor": 3,
+      "configs": {
+        "compression.type": "gzip",
+        "cleanup.policy": "delete",
+        "delete.retention.ms": "86400000"
+      }
+    }
+  ]
+}
