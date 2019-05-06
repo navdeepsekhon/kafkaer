@@ -19,5 +19,13 @@
         "delete.retention.ms": "86400000"
       }
     }
+  ],
+  "brokers": [
+    {
+      "id": "1",
+      "config": {
+        "sasl.login.refresh.window.jitter": "0.05"
+      }
+    }
   ]
 }

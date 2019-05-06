@@ -1,3 +1,4 @@
+import co.navdeep.kafkaer.model.Broker;
 import co.navdeep.kafkaer.model.Config;
 import co.navdeep.kafkaer.model.Topic;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -19,6 +20,12 @@ public class ConfigJsonGenerate {
         config.setTopics(new ArrayList<>());
         config.getTopics().add(topic);
 
+        Broker broker = new Broker();
+        broker.setId("1");
+        broker.setConfig(new HashMap<>());
+        broker.getConfig().put("sasl.login.refresh.window.jitter", "0.05");
+        config.setBrokers(new ArrayList<>());
+        config.getBrokers().add(broker);
         ObjectMapper mapper = new ObjectMapper();
         System.out.println(mapper.writeValueAsString(config));
     }

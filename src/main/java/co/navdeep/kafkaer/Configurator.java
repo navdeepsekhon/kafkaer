@@ -1,5 +1,6 @@
 package co.navdeep.kafkaer;
 
+import co.navdeep.kafkaer.model.Broker;
 import co.navdeep.kafkaer.model.Config;
 import co.navdeep.kafkaer.model.Topic;
 import co.navdeep.kafkaer.utils.Utils;
@@ -48,13 +49,37 @@ public class Configurator {
 
     public void configureBrokers() throws ExecutionException, InterruptedException {
         if(!config.hasBrokerConfig()) return;
+        Map<String, ConfigResource> configResourceMap = brokerConfigResourceMap();
+        if(!configResourceMap.isEmpty()){
+            for(Broker broker : config.getBrokers()){
+                Map<ConfigResource, org.apache.kafka.clients.admin.Config> updateConfig = new HashMap<>();
+                if(broker.hasId()){
+                    updateConfig.put(configResourceMap.get(broker.getId()), broker.configsAsKafkaConfig());
+                } else {
+                    makeConfigForAllBrokers(configResourceMap, broker.configsAsKafkaConfig(), updateConfig);
+                }
+                AlterConfigsResult result = adminClient.alterConfigs(updateConfig);
+                result.all().get();
+            }
+        }
+    }
+
+    private void makeConfigForAllBrokers(Map<String, ConfigResource> configResourceMap, org.apache.kafka.clients.admin.Config config, Map<ConfigResource, org.apache.kafka.clients.admin.Config> configs){
+        for(String key : configResourceMap.keySet()){
+            configs.put(configResourceMap.get(key), config);
+        }
+    }
+    private Map<String, ConfigResource> brokerConfigResourceMap() throws ExecutionException, InterruptedException {
         DescribeClusterResult describeClusterResult = adminClient.describeCluster();
         List<Node> nodes = new ArrayList<>(describeClusterResult.nodes().get());
+        Map<String, ConfigResource> map = new HashMap<>();
         if(!nodes.isEmpty()){
-            ConfigResource resource = new ConfigResource(ConfigResource.Type.BROKER, String.valueOf(nodes.get(0).id()));
-            Map<ConfigResource, org.apache.kafka.clients.admin.Config> updateConfig = new HashMap<>();
-            updateConfig.put(resource, config.getBrokers().get(0).configsAsKafkaConfig());
+            for(Node node : nodes){
+                ConfigResource resource = new ConfigResource(ConfigResource.Type.BROKER, String.valueOf(node.id()));
+                map.put(String.valueOf(node.id()), resource);
+            }
         }
+        return map;
     }
     public void configureTopics() throws ExecutionException, InterruptedException {
         Map<String, KafkaFuture<TopicDescription>> topicResults = adminClient.describeTopics(config.getAllTopicNames()).values();
