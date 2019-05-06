@@ -10,6 +10,7 @@ import org.apache.kafka.clients.admin.ConfigEntry;
 import java.util.*;
 
 public class Utils {
+    private static final String PROPERTY_PREFIX = "kafkaer";
 
     public static Configuration readProperties(String location) throws ConfigurationException {
         return new Configurations().properties(location);
@@ -27,11 +28,13 @@ public class Utils {
 
     public static Properties getClientConfig(Configuration properties){
         Properties config = new Properties();
-        config.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:29092");
-        config.put(AdminClientConfig.CLIENT_ID_CONFIG, "kafkaer");
+        properties.getKeys(PROPERTY_PREFIX).forEachRemaining( key -> config.put(stripPropertyPrefix(key), properties.getString(key)));
         return config;
     }
 
+    private static String stripPropertyPrefix(String key){
+        return key.substring(key.indexOf(PROPERTY_PREFIX) + PROPERTY_PREFIX.length() + 1);
+    }
     public static org.apache.kafka.clients.admin.Config configsAsKafkaConfig(Map<String, String> config){
         List<ConfigEntry> configEntries = new ArrayList<>();
         for(String key : config.keySet()){

@@ -7,6 +7,7 @@
     - [Topic configurations](#topics)
     - [Broker configurations](#brokers)
  - [Properties file](#properties-file)
+ - [Kafka connection configurations](#cdmin-client-configs)
  - [Contributions](#contributions)
 
  
@@ -87,7 +88,7 @@ All other configs will be updated to the new values from config.
 ## Brokers
 A list of broker configs.
 
-NOTE: If a broker id is provided, the update is made only on that broker. If no broker id is provided update is sent to each broker in the cluster.
+NOTE: If a broker id is provided, the update is made only on that broker. If no broker id is provided update is sent to each broker in the cluster. [See kafka documentation for all broker configs](https://kafka.apache.org/documentation/#brokerconfigs)
 
 
 
@@ -103,8 +104,17 @@ Use case 2: You might need 50 partitions for your topics in production but only 
 # Properties file
 Standard java properties file.
 ```json
+#admin client configs
+kafkaer.bootstrap.servers=localhost:29092
+kafkaer.client.id=kafkaer
+
+#variables
 topic.suffix=iamasuffix
 ```
+
+# Admin Client configs
+Kafkaer uses `AdminClient` API to connect to Kafka.
+All the admin client configs can be provided in the same properties file. Property name must have prefix `kafkaer.` followed by one of `AdminClientConfig`. For example, to specify `bootstrap.servers` add a property called `kafkaer.bootstrap.servers`. All the admin client configs are supported. [See the list of configs here](https://github.com/apache/kafka/blob/trunk/clients/src/main/java/org/apache/kafka/clients/admin/AdminClientConfig.java)
 
 # Contributions
 Merge requests welcome. Please create an issue with change details and link it to your merge request.
