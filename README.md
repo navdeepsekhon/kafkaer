@@ -16,6 +16,7 @@ Kafkaer is a deployment and configuration tool for Apache Kafka. It allows you t
 
 # Two ways to use:
 ## Executable jar
+Get the jar from [releases](https://github.com/navdeepsekhon/kafkaer/releases)
 ```
 java -jar kafkaer.jar propertiesLocation configLocation
 ```
