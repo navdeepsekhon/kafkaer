@@ -36,8 +36,8 @@ public class ConfiguratorTest {
         Config config = configurator.getConfig();
         Assert.assertFalse(config.getTopics().isEmpty());
         Assert.assertEquals(config.getTopics().get(0).getName(), "withSuffix-iamasuffix");
-        Assert.assertEquals(config.getTopics().get(0).getPartitions(), 3);
-        Assert.assertEquals(config.getTopics().get(0).getReplicationFactor(), 3);
+        Assert.assertEquals(config.getTopics().get(0).getPartitions(), 1);
+        Assert.assertEquals(config.getTopics().get(0).getReplicationFactor(), 1);
         Assert.assertEquals(config.getTopics().get(0).getConfigs().get("compression.type"), "gzip");
     }
 
@@ -76,6 +76,7 @@ public class ConfiguratorTest {
         Config config = new Config();
         Topic topic = new Topic(UUID.randomUUID().toString(), 1, (short)1);
         topic.setConfigs(Collections.singletonMap("delete.retention.ms", "123"));
+        config.getTopics().add(topic);
 
         Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
         configurator.applyConfig();
