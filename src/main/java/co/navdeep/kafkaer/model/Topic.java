@@ -5,7 +5,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.Accessors;
 import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.NewTopic;
 
@@ -14,7 +13,6 @@ import java.util.Map;
 @Data
 @RequiredArgsConstructor
 @NoArgsConstructor
-@Accessors(chain = true, fluent = true)
 public class Topic {
     @NonNull private String name;
     @NonNull private int partitions;

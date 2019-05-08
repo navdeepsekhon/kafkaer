@@ -48,10 +48,10 @@ public class Configurator {
         if(!config.hasBrokerConfig()) return;
         Map<String, ConfigResource> configResourceMap = brokerConfigResourceMap();
         if(!configResourceMap.isEmpty()){
-            for(Broker broker : config.brokers()){
+            for(Broker broker : config.getBrokers()){
                 Map<ConfigResource, org.apache.kafka.clients.admin.Config> updateConfig = new HashMap<>();
                 if(broker.hasId()){
-                    updateConfig.put(configResourceMap.get(broker.id()), broker.configsAsKafkaConfig());
+                    updateConfig.put(configResourceMap.get(broker.getId()), broker.configsAsKafkaConfig());
                 } else {
                     makeConfigForAllBrokers(configResourceMap, broker.configsAsKafkaConfig(), updateConfig);
                 }
@@ -80,9 +80,9 @@ public class Configurator {
     }
     public void configureTopics() throws ExecutionException, InterruptedException {
         Map<String, KafkaFuture<TopicDescription>> topicResults = adminClient.describeTopics(config.getAllTopicNames()).values();
-        for(Topic topic : config.topics()){
+        for(Topic topic : config.getTopics()){
             try {
-                TopicDescription td = topicResults.get(topic.name()).get();
+                TopicDescription td = topicResults.get(topic.getName()).get();
                 handleTopicPartitionsUpdate(td, topic);
                 handleTopicConfigUpdate(topic);
             } catch(ExecutionException e){
@@ -93,7 +93,7 @@ public class Configurator {
     }
 
     private void handleTopicConfigUpdate(Topic topic) throws InterruptedException {
-        ConfigResource configResource = new ConfigResource(ConfigResource.Type.TOPIC, topic.name());
+        ConfigResource configResource = new ConfigResource(ConfigResource.Type.TOPIC, topic.getName());
         Map<ConfigResource, org.apache.kafka.clients.admin.Config> updateConfig = new HashMap<>();
         updateConfig.put(configResource, topic.configsAsKafkaConfig());
         AlterConfigsResult alterConfigsResult = adminClient.alterConfigs(updateConfig);
@@ -105,11 +105,11 @@ public class Configurator {
     }
     private void handleTopicPartitionsUpdate(TopicDescription current, Topic topic) throws InterruptedException {
         try {
-            if(current.partitions().size() < topic.partitions()){
-                CreatePartitionsResult result = adminClient.createPartitions(Collections.singletonMap(topic.name(), NewPartitions.increaseTo(topic.partitions())));
+            if(current.partitions().size() < topic.getPartitions()){
+                CreatePartitionsResult result = adminClient.createPartitions(Collections.singletonMap(topic.getName(), NewPartitions.increaseTo(topic.getPartitions())));
                 result.all().get();
-            } else if(current.partitions().size() > topic.partitions()){
-                throw new RuntimeException("Can not reduce number of partitions for topic [" + topic.name() + "] from current:" + current.partitions().size() + " to " + topic.partitions());
+            } else if(current.partitions().size() > topic.getPartitions()){
+                throw new RuntimeException("Can not reduce number of partitions for topic [" + topic.getName() + "] from current:" + current.partitions().size() + " to " + topic.getPartitions());
             }
         } catch(ExecutionException e){
             throw new RuntimeException(e);

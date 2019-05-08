@@ -13,19 +13,18 @@ public class ConfigJsonGenerate {
     public void generateConfigJson() throws JsonProcessingException {
         Config config = new Config();
         Topic topic = new Topic();
-        topic.name("test");
-        topic.configs(new HashMap<>());
-        topic.configs().put("cleanup.policy", "compact");
-        topic.configs().put("compression.type", "gzip");
-        config.topics(new ArrayList<>());
-        config.topics().add(topic);
+        topic.setName("test");
+        topic.setConfigs(new HashMap<>());
+        topic.getConfigs().put("cleanup.policy", "compact");
+        topic.getConfigs().put("compression.type", "gzip");
+        config.getTopics().add(topic);
 
         Broker broker = new Broker();
-        broker.id("1");
-        broker.config(new HashMap<>());
-        broker.config().put("sasl.login.refresh.window.jitter", "0.05");
-        config.brokers(new ArrayList<>());
-        config.brokers().add(broker);
+        broker.setId("1");
+        broker.setConfig(new HashMap<>());
+        broker.getConfig().put("sasl.login.refresh.window.jitter", "0.05");
+        config.setBrokers(new ArrayList<>());
+        config.getBrokers().add(broker);
         ObjectMapper mapper = new ObjectMapper();
         System.out.println(mapper.writeValueAsString(config));
     }

@@ -34,11 +34,11 @@ public class ConfiguratorTest {
     public void testReadConfig() throws IOException, ConfigurationException {
         Configurator configurator = new Configurator(PROPERTIES_LOCATION, CONFIG_LOCATION);
         Config config = configurator.getConfig();
-        Assert.assertFalse(config.topics().isEmpty());
-        Assert.assertEquals(config.topics().get(0).name(), "withSuffix-iamasuffix");
-        Assert.assertEquals(config.topics().get(0).partitions(), 3);
-        Assert.assertEquals(config.topics().get(0).replicationFactor(), 3);
-        Assert.assertEquals(config.topics().get(0).configs().get("compression.type"), "gzip");
+        Assert.assertFalse(config.getTopics().isEmpty());
+        Assert.assertEquals(config.getTopics().get(0).getName(), "withSuffix-iamasuffix");
+        Assert.assertEquals(config.getTopics().get(0).getPartitions(), 3);
+        Assert.assertEquals(config.getTopics().get(0).getReplicationFactor(), 3);
+        Assert.assertEquals(config.getTopics().get(0).getConfigs().get("compression.type"), "gzip");
     }
 
     @Test
@@ -46,7 +46,7 @@ public class ConfiguratorTest {
         Config config = new Config();
         String topicName = UUID.randomUUID().toString();
         Topic topic = new Topic(topicName, 1, (short)1);
-        config.topics().add(topic);
+        config.getTopics().add(topic);
 
         Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
         configurator.applyConfig();
@@ -61,8 +61,8 @@ public class ConfiguratorTest {
         String topicName2 = UUID.randomUUID().toString();
         Topic topic = new Topic(topicName, 1, (short)1);
         Topic topic2 = new Topic(topicName2, 2, (short)1);
-        config.topics().add(topic);
-        config.topics().add(topic2);
+        config.getTopics().add(topic);
+        config.getTopics().add(topic2);
 
         Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
         configurator.applyConfig();
@@ -74,12 +74,13 @@ public class ConfiguratorTest {
     @Test
     public void testTopicCreationWithConfigs() throws ExecutionException, InterruptedException, ConfigurationException {
         Config config = new Config();
-        Topic topic = new Topic(UUID.randomUUID().toString(), 1, (short)1).configs(Collections.singletonMap("delete.retention.ms", "123"));
+        Topic topic = new Topic(UUID.randomUUID().toString(), 1, (short)1);
+        topic.setConfigs(Collections.singletonMap("delete.retention.ms", "123"));
 
         Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
         configurator.applyConfig();
 
-        ConfigResource configResource = new ConfigResource(ConfigResource.Type.TOPIC, topic.name());
+        ConfigResource configResource = new ConfigResource(ConfigResource.Type.TOPIC, topic.getName());
         DescribeConfigsResult result = adminClient.describeConfigs(Collections.singletonList(configResource));
 
         org.apache.kafka.clients.admin.Config topicConfig = result.all().get().get(configResource);
@@ -88,11 +89,11 @@ public class ConfiguratorTest {
     }
 
     private void compareWithKafkaTopic(Topic topic) throws ExecutionException, InterruptedException {
-        DescribeTopicsResult result = adminClient.describeTopics(Collections.singletonList(topic.name()));
-        TopicDescription kafkaTopic = result.all().get().get(topic.name());
+        DescribeTopicsResult result = adminClient.describeTopics(Collections.singletonList(topic.getName()));
+        TopicDescription kafkaTopic = result.all().get().get(topic.getName());
         Assert.assertNotNull(kafkaTopic);
-        Assert.assertEquals(kafkaTopic.partitions().size(), topic.partitions());
-        Assert.assertEquals(kafkaTopic.partitions().get(0).replicas().size(), topic.replicationFactor());
+        Assert.assertEquals(kafkaTopic.partitions().size(), topic.getPartitions());
+        Assert.assertEquals(kafkaTopic.partitions().get(0).replicas().size(), topic.getReplicationFactor());
     }
 
 }
