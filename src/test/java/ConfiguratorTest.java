@@ -86,7 +86,7 @@ public class ConfiguratorTest {
 
         org.apache.kafka.clients.admin.Config topicConfig = result.all().get().get(configResource);
 
-        Assert.assertEquals(topicConfig.get("delete.retention.ms"), "123");
+        Assert.assertEquals(topicConfig.get("delete.retention.ms").value(), "123");
     }
 
     private void compareWithKafkaTopic(Topic topic) throws ExecutionException, InterruptedException {
