@@ -1,13 +1,19 @@
 package co.navdeep.kafkaer.utils;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.kafka.clients.admin.AdminClientConfig;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.text.StringSubstitutor;
 import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.ConfigEntry;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class Utils {
     private static final String PROPERTY_PREFIX = "kafkaer";
@@ -35,11 +41,20 @@ public class Utils {
     private static String stripPropertyPrefix(String key){
         return key.substring(key.indexOf(PROPERTY_PREFIX) + PROPERTY_PREFIX.length() + 1);
     }
+
     public static org.apache.kafka.clients.admin.Config configsAsKafkaConfig(Map<String, String> config){
         List<ConfigEntry> configEntries = new ArrayList<>();
         for(String key : config.keySet()){
             configEntries.add(new ConfigEntry(key, config.get(key)));
         }
         return new Config(configEntries);
+    }
+
+    public static co.navdeep.kafkaer.model.Config readConfig(String location, Map<String, String> valueMap) throws IOException {
+        String configString = FileUtils.readFileToString(new File(location), UTF_8);
+        StringSubstitutor substitutor = new StringSubstitutor(valueMap);
+        configString = substitutor.replace(configString);
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.readValue(configString, co.navdeep.kafkaer.model.Config.class);
     }
 }

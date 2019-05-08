@@ -30,18 +30,15 @@ public class Configurator {
 
     public Configurator(String propertiesLocation, String configLocation) throws ConfigurationException, IOException {
         properties = Utils.readProperties(propertiesLocation);
-        config = readConfig(configLocation, Utils.propertiesToMap(properties));
+        config = Utils.readConfig(configLocation, Utils.propertiesToMap(properties));
         adminClient = AdminClient.create(Utils.getClientConfig(properties));
     }
 
-    private Config readConfig(String location, Map<String, String> valueMap) throws IOException {
-        String configString = FileUtils.readFileToString(new File(location), UTF_8);
-        StringSubstitutor substitutor = new StringSubstitutor(valueMap);
-        configString = substitutor.replace(configString);
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.readValue(configString, Config.class);
+    public Configurator(Configuration p, Config c){
+        properties = p;
+        config = c;
+        adminClient = AdminClient.create(Utils.getClientConfig(properties));
     }
-
     public void applyConfig() throws ExecutionException, InterruptedException {
         configureTopics();
         configureBrokers();
@@ -51,10 +48,10 @@ public class Configurator {
         if(!config.hasBrokerConfig()) return;
         Map<String, ConfigResource> configResourceMap = brokerConfigResourceMap();
         if(!configResourceMap.isEmpty()){
-            for(Broker broker : config.getBrokers()){
+            for(Broker broker : config.brokers()){
                 Map<ConfigResource, org.apache.kafka.clients.admin.Config> updateConfig = new HashMap<>();
                 if(broker.hasId()){
-                    updateConfig.put(configResourceMap.get(broker.getId()), broker.configsAsKafkaConfig());
+                    updateConfig.put(configResourceMap.get(broker.id()), broker.configsAsKafkaConfig());
                 } else {
                     makeConfigForAllBrokers(configResourceMap, broker.configsAsKafkaConfig(), updateConfig);
                 }
@@ -83,9 +80,9 @@ public class Configurator {
     }
     public void configureTopics() throws ExecutionException, InterruptedException {
         Map<String, KafkaFuture<TopicDescription>> topicResults = adminClient.describeTopics(config.getAllTopicNames()).values();
-        for(Topic topic : config.getTopics()){
+        for(Topic topic : config.topics()){
             try {
-                TopicDescription td = topicResults.get(topic.getName()).get();
+                TopicDescription td = topicResults.get(topic.name()).get();
                 handleTopicPartitionsUpdate(td, topic);
                 handleTopicConfigUpdate(topic);
             } catch(ExecutionException e){
@@ -96,7 +93,7 @@ public class Configurator {
     }
 
     private void handleTopicConfigUpdate(Topic topic) throws InterruptedException {
-        ConfigResource configResource = new ConfigResource(ConfigResource.Type.TOPIC, topic.getName());
+        ConfigResource configResource = new ConfigResource(ConfigResource.Type.TOPIC, topic.name());
         Map<ConfigResource, org.apache.kafka.clients.admin.Config> updateConfig = new HashMap<>();
         updateConfig.put(configResource, topic.configsAsKafkaConfig());
         AlterConfigsResult alterConfigsResult = adminClient.alterConfigs(updateConfig);
@@ -108,11 +105,11 @@ public class Configurator {
     }
     private void handleTopicPartitionsUpdate(TopicDescription current, Topic topic) throws InterruptedException {
         try {
-            if(current.partitions().size() < topic.getPartitions()){
-                CreatePartitionsResult result = adminClient.createPartitions(Collections.singletonMap(topic.getName(), NewPartitions.increaseTo(topic.getPartitions())));
+            if(current.partitions().size() < topic.partitions()){
+                CreatePartitionsResult result = adminClient.createPartitions(Collections.singletonMap(topic.name(), NewPartitions.increaseTo(topic.partitions())));
                 result.all().get();
-            } else if(current.partitions().size() > topic.getPartitions()){
-                throw new RuntimeException("Can not reduce number of partitions for topic [" + topic.getName() + "] from current:" + current.partitions().size() + " to " + topic.getPartitions());
+            } else if(current.partitions().size() > topic.partitions()){
+                throw new RuntimeException("Can not reduce number of partitions for topic [" + topic.name() + "] from current:" + current.partitions().size() + " to " + topic.partitions());
             }
         } catch(ExecutionException e){
             throw new RuntimeException(e);
