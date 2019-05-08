@@ -13,7 +13,9 @@ jobs:
       # documented at https://circleci.com/docs/2.0/circleci-images/
       # - image: circleci/postgres:9.4
       - image: wurstmeister/zookeeper
+        port: 2181:2181
       - image: wurstmeister/kafka:2.12-2.2.0
+        port: 9092:9092
         environment:
          KAFKA_ADVERTISED_HOST_NAME: localhost
          KAFKA_ADVERTISED_PORT: 9092
@@ -21,6 +23,7 @@ jobs:
          KAFKA_ZOOKEEPER_CONNECT: localhost:2181
          KAFKA_DELETE_TOPIC_ENABLE: true
       - image: wurstmeister/kafka:2.12-2.2.0
+        port: 9093:9093
         environment:
          KAFKA_ADVERTISED_HOST_NAME: localhost
          KAFKA_ADVERTISED_PORT: 9093
