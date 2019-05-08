@@ -2,6 +2,7 @@ package co.navdeep.kafkaer.model;
 
 import co.navdeep.kafkaer.utils.Utils;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
@@ -12,6 +13,7 @@ import java.util.Map;
 
 @Data
 @RequiredArgsConstructor
+@NoArgsConstructor
 @Accessors(chain = true, fluent = true)
 public class Topic {
     @NonNull private String name;

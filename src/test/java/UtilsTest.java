@@ -64,7 +64,7 @@ public class UtilsTest {
         co.navdeep.kafkaer.model.Config config = Utils.readConfig("src/test/resources/kafka-config.json", Collections.singletonMap("topic.suffix", "t"));
         co.navdeep.kafkaer.model.Config config2 = Utils.readConfig("src/test/resources/kafka-config.json", Collections.singletonMap("topic.suffix", "t2"));
 
-        Assert.assertEquals(config.getTopics().get(0).getName(), "withSuffix-t");
-        Assert.assertEquals(config2.getTopics().get(0).getName(), "withSuffix-t2");
+        Assert.assertEquals(config.topics().get(0).name(), "withSuffix-t");
+        Assert.assertEquals(config2.topics().get(0).name(), "withSuffix-t2");
     }
 }
