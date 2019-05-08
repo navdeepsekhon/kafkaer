@@ -89,6 +89,49 @@ public class ConfiguratorTest {
         Assert.assertEquals(topicConfig.get("delete.retention.ms").value(), "123");
     }
 
+    @Test
+    public void testIncreasePartitions() throws ExecutionException, InterruptedException, ConfigurationException {
+        Config config = new Config();
+        String topicName = UUID.randomUUID().toString();
+        Topic topic = new Topic(topicName, 1, (short)1);
+        config.getTopics().add(topic);
+
+        Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
+        configurator.applyConfig();
+
+        compareWithKafkaTopic(topic);
+
+        topic.setPartitions(2);
+        configurator.applyConfig();
+
+        compareWithKafkaTopic(topic);
+    }
+
+    @Test
+    public void testUpdateExistingTopicConfig() throws ConfigurationException, ExecutionException, InterruptedException {
+        Config config = new Config();
+        Topic topic = new Topic(UUID.randomUUID().toString(), 1, (short)1);
+        topic.setConfigs(Collections.singletonMap("delete.retention.ms", "123"));
+        config.getTopics().add(topic);
+
+        Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
+        configurator.applyConfig();
+
+        ConfigResource configResource = new ConfigResource(ConfigResource.Type.TOPIC, topic.getName());
+        DescribeConfigsResult result = adminClient.describeConfigs(Collections.singletonList(configResource));
+
+        org.apache.kafka.clients.admin.Config topicConfig = result.all().get().get(configResource);
+
+        Assert.assertEquals(topicConfig.get("delete.retention.ms").value(), "123");
+
+        //update the same topic
+        topic.setConfigs(Collections.singletonMap("delete.retention.ms", "321"));
+        configurator.applyConfig();
+        result = adminClient.describeConfigs(Collections.singletonList(configResource));
+        topicConfig = result.all().get().get(configResource);
+        Assert.assertEquals(topicConfig.get("delete.retention.ms").value(), "321");
+    }
+
     private void compareWithKafkaTopic(Topic topic) throws ExecutionException, InterruptedException {
         DescribeTopicsResult result = adminClient.describeTopics(Collections.singletonList(topic.getName()));
         TopicDescription kafkaTopic = result.all().get().get(topic.getName());
