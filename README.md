@@ -1,4 +1,5 @@
 # kafkaer
+[![CircleCI](https://circleci.com/gh/navdeepsekhon/kafkaer.svg?style=svg)](https://circleci.com/gh/navdeepsekhon/kafkaer)
 
 ## Table of Contents
  - [Overview](#overview)
