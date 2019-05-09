@@ -2,19 +2,21 @@ package co.navdeep.kafkaer.model;
 
 import co.navdeep.kafkaer.utils.Utils;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.admin.Config;
-import org.apache.kafka.clients.admin.ConfigEntry;
 import org.apache.kafka.clients.admin.NewTopic;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 @Data
+@RequiredArgsConstructor
+@NoArgsConstructor
 public class Topic {
-    private String name;
-    private int partitions;
-    private short replicationFactor;
+    @NonNull private String name;
+    @NonNull private int partitions;
+    @NonNull private short replicationFactor;
     private Map<String, String> configs;
 
     public NewTopic toNewTopic(){
@@ -24,6 +26,9 @@ public class Topic {
         return newTopic;
     }
 
+    public boolean hasConfigs(){
+        return configs != null && !configs.isEmpty();
+    }
     public Config configsAsKafkaConfig(){
         return Utils.configsAsKafkaConfig(configs);
     }

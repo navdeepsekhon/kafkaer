@@ -30,18 +30,15 @@ public class Configurator {
 
     public Configurator(String propertiesLocation, String configLocation) throws ConfigurationException, IOException {
         properties = Utils.readProperties(propertiesLocation);
-        config = readConfig(configLocation, Utils.propertiesToMap(properties));
+        config = Utils.readConfig(configLocation, Utils.propertiesToMap(properties));
         adminClient = AdminClient.create(Utils.getClientConfig(properties));
     }
 
-    private Config readConfig(String location, Map<String, String> valueMap) throws IOException {
-        String configString = FileUtils.readFileToString(new File(location), UTF_8);
-        StringSubstitutor substitutor = new StringSubstitutor(valueMap);
-        configString = substitutor.replace(configString);
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.readValue(configString, Config.class);
+    public Configurator(Configuration p, Config c){
+        properties = p;
+        config = c;
+        adminClient = AdminClient.create(Utils.getClientConfig(properties));
     }
-
     public void applyConfig() throws ExecutionException, InterruptedException {
         configureTopics();
         configureBrokers();
@@ -49,38 +46,18 @@ public class Configurator {
 
     public void configureBrokers() throws ExecutionException, InterruptedException {
         if(!config.hasBrokerConfig()) return;
-        Map<String, ConfigResource> configResourceMap = brokerConfigResourceMap();
-        if(!configResourceMap.isEmpty()){
-            for(Broker broker : config.getBrokers()){
-                Map<ConfigResource, org.apache.kafka.clients.admin.Config> updateConfig = new HashMap<>();
-                if(broker.hasId()){
-                    updateConfig.put(configResourceMap.get(broker.getId()), broker.configsAsKafkaConfig());
-                } else {
-                    makeConfigForAllBrokers(configResourceMap, broker.configsAsKafkaConfig(), updateConfig);
-                }
-                AlterConfigsResult result = adminClient.alterConfigs(updateConfig);
-                result.all().get();
-            }
+
+        Map<ConfigResource, org.apache.kafka.clients.admin.Config> updateConfig = new HashMap<>();
+        for(Broker broker : config.getBrokers()){
+            ConfigResource configResource = new ConfigResource(ConfigResource.Type.BROKER, broker.getId());
+            updateConfig.put(configResource, broker.configsAsKafkaConfig());
         }
+
+        AlterConfigsResult result = adminClient.alterConfigs(updateConfig);
+        result.all().get();
+
     }
 
-    private void makeConfigForAllBrokers(Map<String, ConfigResource> configResourceMap, org.apache.kafka.clients.admin.Config config, Map<ConfigResource, org.apache.kafka.clients.admin.Config> configs){
-        for(String key : configResourceMap.keySet()){
-            configs.put(configResourceMap.get(key), config);
-        }
-    }
-    private Map<String, ConfigResource> brokerConfigResourceMap() throws ExecutionException, InterruptedException {
-        DescribeClusterResult describeClusterResult = adminClient.describeCluster();
-        List<Node> nodes = new ArrayList<>(describeClusterResult.nodes().get());
-        Map<String, ConfigResource> map = new HashMap<>();
-        if(!nodes.isEmpty()){
-            for(Node node : nodes){
-                ConfigResource resource = new ConfigResource(ConfigResource.Type.BROKER, String.valueOf(node.id()));
-                map.put(String.valueOf(node.id()), resource);
-            }
-        }
-        return map;
-    }
     public void configureTopics() throws ExecutionException, InterruptedException {
         Map<String, KafkaFuture<TopicDescription>> topicResults = adminClient.describeTopics(config.getAllTopicNames()).values();
         for(Topic topic : config.getTopics()){
@@ -96,6 +73,7 @@ public class Configurator {
     }
 
     private void handleTopicConfigUpdate(Topic topic) throws InterruptedException {
+        if(!topic.hasConfigs()) return;
         ConfigResource configResource = new ConfigResource(ConfigResource.Type.TOPIC, topic.getName());
         Map<ConfigResource, org.apache.kafka.clients.admin.Config> updateConfig = new HashMap<>();
         updateConfig.put(configResource, topic.configsAsKafkaConfig());

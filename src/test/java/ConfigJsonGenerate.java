@@ -17,7 +17,6 @@ public class ConfigJsonGenerate {
         topic.setConfigs(new HashMap<>());
         topic.getConfigs().put("cleanup.policy", "compact");
         topic.getConfigs().put("compression.type", "gzip");
-        config.setTopics(new ArrayList<>());
         config.getTopics().add(topic);
 
         Broker broker = new Broker();

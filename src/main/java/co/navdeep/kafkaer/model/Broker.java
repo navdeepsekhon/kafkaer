@@ -15,7 +15,7 @@ public class Broker {
         return Utils.configsAsKafkaConfig(config);
     }
 
-    public boolean hasId(){
-        return id != null && !"".equals(id);
+    public String getId(){
+        return id == null ? "" : id;
     }
 }

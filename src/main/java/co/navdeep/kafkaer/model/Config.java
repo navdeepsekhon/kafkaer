@@ -4,12 +4,16 @@ import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Data
 public class Config {
     private List<Topic> topics;
     private List<Broker> brokers;
+
+    public Config(){
+        topics = new ArrayList<>();
+        brokers = new ArrayList<>();
+    }
 
     public List<String> getAllTopicNames(){
         List<String> names = new ArrayList<>();
