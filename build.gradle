@@ -22,7 +22,7 @@ dependencies {
     compile "commons-io:commons-io:2.6"
     compile "org.apache.commons:commons-configuration2:2.4"
     compile "commons-beanutils:commons-beanutils:1.9.3"
-    
+
     compileOnly "org.projectlombok:lombok:1.18.6"
     annotationProcessor "org.projectlombok:lombok:1.18.6"
     
@@ -57,6 +57,12 @@ signing {
     sign configurations.archives
 }
 
+def usr = ''
+def pwd = ''
+if(project.hasProperty("nexusUsername")){
+    usr = nexusUsername
+    pwd = nexusPassword
+}
 
 uploadArchives {
     repositories {
@@ -64,11 +70,11 @@ uploadArchives {
             beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
             repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                authentication(userName: nexusUsername, password: nexusPassword)
+                authentication(userName: usr, password: pwd)
             }
 
             snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-                authentication(userName: nexusUsername, password: nexusPassword)
+                authentication(userName: usr, password: pwd)
             }
 
             pom.project {
