@@ -23,7 +23,21 @@ Get the jar from [releases](https://github.com/navdeepsekhon/kafkaer/releases)
 java -jar kafkaer.jar propertiesLocation configLocation
 ```
 
-## Include jar as dep in project
+## Include jar as dep in project from maven central
+Gradle:
+```json
+compile "co.navdeep:kafkaer:0.1"
+```
+Maven:
+```xml
+<dependency>
+    <groupId>co.navdeep</groupId>
+    <artifactId>kafkaer</artifactId>
+    <version>0.1</version>
+</dependency>
+```
+
+And use it:
 ```java
 Configurator configurator = new Configurator("src/main/resources/your.properties", "src/main/resources/kafka-config.json");
 configurator.applyConfig();

@@ -2,7 +2,8 @@
 .gradle
 /build/
 /out/
-
+gradle.properties
+*.gpg
 # Ignore Gradle GUI config
 gradle-app.setting
 
