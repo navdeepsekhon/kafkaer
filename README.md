@@ -16,6 +16,17 @@
 # Overview
 Kafkaer is a deployment and configuration tool for Apache Kafka. It allows you to automate creation/update of topics and brokers across multiple environments. 
 
+Current features:
+* Create topics
+* Update configurations and partitions for existing topics
+* Update configs for a specific broker
+* Update configs for entire kafka cluster
+
+Future features:
+* Create/update Access control lists (ACLs)
+* Copy kafka clusters by creating kafka-config.json from existing cluster
+
+
 # Two ways to use:
 ## Executable jar
 Get the jar from [releases](https://github.com/navdeepsekhon/kafkaer/releases)
