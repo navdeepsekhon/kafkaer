@@ -1,4 +1,5 @@
 import co.navdeep.kafkaer.Configurator;
+import co.navdeep.kafkaer.model.Broker;
 import co.navdeep.kafkaer.model.Config;
 import co.navdeep.kafkaer.model.Topic;
 import co.navdeep.kafkaer.utils.Utils;
@@ -8,13 +9,16 @@ import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.DescribeConfigsResult;
 import org.apache.kafka.clients.admin.DescribeTopicsResult;
 import org.apache.kafka.clients.admin.TopicDescription;
+import org.apache.kafka.common.Node;
 import org.apache.kafka.common.config.ConfigResource;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
@@ -132,6 +136,46 @@ public class ConfiguratorTest {
         Assert.assertEquals(topicConfig.get("delete.retention.ms").value(), "321");
     }
 
+
+    @Test
+    public void testSpecificBrokerConfigUpdate() throws ExecutionException, InterruptedException, ConfigurationException {
+        Node brokerNode = new ArrayList<>(adminClient.describeCluster().nodes().get()).get(0);
+        Config config = new Config();
+        Broker broker = new Broker();
+        broker.setId(String.valueOf(brokerNode.id()));
+        broker.setConfig(Collections.singletonMap("sasl.kerberos.min.time.before.relogin", "60001"));
+        config.getBrokers().add(broker);
+
+        Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
+        configurator.applyConfig();
+
+        ConfigResource configResource = new ConfigResource(ConfigResource.Type.BROKER, String.valueOf(brokerNode.id()));
+        DescribeConfigsResult result = adminClient.describeConfigs(Collections.singletonList(configResource));
+        org.apache.kafka.clients.admin.Config brokerConfig = result.all().get().get(configResource);
+
+        //Default is 60000
+        Assert.assertEquals(brokerConfig.get("sasl.kerberos.min.time.before.relogin").value(), "60001");
+    }
+
+    @Test
+    public void testClusterwideConfigUpdate() throws ExecutionException, InterruptedException, ConfigurationException {
+        List<Node> nodes = new ArrayList<>(adminClient.describeCluster().nodes().get());
+        Broker broker = new Broker();
+        Config config = new Config();
+        //Default is 2147483647
+        broker.setConfig(Collections.singletonMap("max.connections.per.ip", "10000"));
+        config.getBrokers().add(broker);
+        Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
+        configurator.applyConfig();
+
+        for(Node node : nodes){
+            ConfigResource configResource = new ConfigResource(ConfigResource.Type.BROKER, String.valueOf(node.id()));
+            DescribeConfigsResult result = adminClient.describeConfigs(Collections.singletonList(configResource));
+            org.apache.kafka.clients.admin.Config brokerConfig = result.all().get().get(configResource);
+            Assert.assertEquals(brokerConfig.get("max.connections.per.ip").value(), "10000");
+        }
+
+    }
     private void compareWithKafkaTopic(Topic topic) throws ExecutionException, InterruptedException {
         DescribeTopicsResult result = adminClient.describeTopics(Collections.singletonList(topic.getName()));
         TopicDescription kafkaTopic = result.all().get().get(topic.getName());
