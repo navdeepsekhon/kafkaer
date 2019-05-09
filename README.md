@@ -7,6 +7,7 @@
  - [Define configurations](#kafka-config.json)
     - [Topic configurations](#topics)
     - [Broker configurations](#brokers)
+    - [ACL configurations](#acls)
  - [Properties file](#properties-file)
  - [Kafka connection configurations](#cdmin-client-configs)
  - [Contributions](#contributions)
@@ -53,7 +54,6 @@ configurator.applyConfig();
       }
     }
   ],
-  ,
     "brokers": [
       {
         "id": "1",
@@ -92,7 +92,10 @@ A list of broker configs.
 
 NOTE: If a broker id is provided, the update is made only on that broker. If no broker id is provided update is sent to each broker in the cluster. [See kafka documentation for all broker configs](https://kafka.apache.org/documentation/#brokerconfigs)
 
+Cluster-wide configs must be without an id.
 
+## ACLs
+coming soon
 
 ## Variables in kafka-config.json 
 To allow for deployments across different environments, kafka-config.json allows you to specify variables for values that will be replaced with values from the properties file. In the example above the topic name `withSuffix-${topic.suffix}` will be replaced with `withSuffix-iamasuffix` using the value of `topic.suffix` from props. 
