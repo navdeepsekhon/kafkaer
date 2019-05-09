@@ -14,7 +14,9 @@
 
  
 # Overview
-Kafkaer is a deployment and configuration tool for Apache Kafka. It allows you to automate creation/update of topics and brokers across multiple environments. 
+Kafkaer is a deployment and configuration tool for Apache Kafka. It allows you to automate creation/update of topics and brokers across multiple environments. Create one template configration file and control using different properties files.
+
+
 
 Current features:
 * Create topics
