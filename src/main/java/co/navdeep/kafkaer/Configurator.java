@@ -93,6 +93,7 @@ public class Configurator {
     }
 
     private void handleTopicConfigUpdate(Topic topic) throws InterruptedException {
+        if(!topic.hasConfigs()) return;
         ConfigResource configResource = new ConfigResource(ConfigResource.Type.TOPIC, topic.getName());
         Map<ConfigResource, org.apache.kafka.clients.admin.Config> updateConfig = new HashMap<>();
         updateConfig.put(configResource, topic.configsAsKafkaConfig());

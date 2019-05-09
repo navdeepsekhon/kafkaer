@@ -26,6 +26,9 @@ public class Topic {
         return newTopic;
     }
 
+    public boolean hasConfigs(){
+        return configs != null && !configs.isEmpty();
+    }
     public Config configsAsKafkaConfig(){
         return Utils.configsAsKafkaConfig(configs);
     }
