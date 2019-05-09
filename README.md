@@ -4,12 +4,12 @@
 ## Table of Contents
  - [Overview](#overview)
  - [Integrate with your project](#two-ways-to-use)
- - [Define configurations](#kafka-config.json)
+ - [Define configurations](#kafka-configjson)
     - [Topic configurations](#topics)
     - [Broker configurations](#brokers)
     - [ACL configurations](#acls)
  - [Properties file](#properties-file)
- - [Kafka connection configurations](#cdmin-client-configs)
+ - [Kafka connection configurations](#admin-client-configs)
  - [Contributions](#contributions)
 
  
