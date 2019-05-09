@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 public class ConfiguratorTest {
 
@@ -149,6 +150,7 @@ public class ConfiguratorTest {
         Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
         configurator.applyConfig();
 
+        TimeUnit.SECONDS.sleep(3);
         ConfigResource configResource = new ConfigResource(ConfigResource.Type.BROKER, String.valueOf(brokerNode.id()));
         DescribeConfigsResult result = adminClient.describeConfigs(Collections.singletonList(configResource));
         org.apache.kafka.clients.admin.Config brokerConfig = result.all().get().get(configResource);
@@ -168,6 +170,7 @@ public class ConfiguratorTest {
         Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
         configurator.applyConfig();
 
+        TimeUnit.SECONDS.sleep(3);
         for(Node node : nodes){
             ConfigResource configResource = new ConfigResource(ConfigResource.Type.BROKER, String.valueOf(node.id()));
             DescribeConfigsResult result = adminClient.describeConfigs(Collections.singletonList(configResource));
