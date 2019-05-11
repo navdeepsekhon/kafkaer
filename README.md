@@ -1,5 +1,6 @@
 # kafkaer
 [![CircleCI](https://circleci.com/gh/navdeepsekhon/kafkaer.svg?style=svg)](https://circleci.com/gh/navdeepsekhon/kafkaer)
+[![Maven Central](https://img.shields.io/maven-central/v/co.navdeep/kafkaer.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22co.navdeep%22%20AND%20a:%22kafkaer%22)
 
 ## Table of Contents
  - [Overview](#overview)
