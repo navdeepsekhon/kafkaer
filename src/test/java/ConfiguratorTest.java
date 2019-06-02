@@ -75,6 +75,7 @@ public class ConfiguratorTest {
         Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
         configurator.applyConfig();
 
+        sleep();
         compareWithKafkaTopic(topic);
     }
 
@@ -91,6 +92,7 @@ public class ConfiguratorTest {
         Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
         configurator.applyConfig();
 
+        sleep();
         compareWithKafkaTopic(topic);
         compareWithKafkaTopic(topic2);
     }
@@ -105,6 +107,7 @@ public class ConfiguratorTest {
         Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
         configurator.applyConfig();
 
+        sleep();
         ConfigResource configResource = new ConfigResource(ConfigResource.Type.TOPIC, topic.getName());
         DescribeConfigsResult result = adminClient.describeConfigs(Collections.singletonList(configResource));
 
@@ -123,6 +126,7 @@ public class ConfiguratorTest {
         Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
         configurator.applyConfig();
 
+        sleep();
         compareWithKafkaTopic(topic);
 
         topic.setPartitions(2);
@@ -141,6 +145,7 @@ public class ConfiguratorTest {
         Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
         configurator.applyConfig();
 
+        sleep();
         ConfigResource configResource = new ConfigResource(ConfigResource.Type.TOPIC, topic.getName());
         DescribeConfigsResult result = adminClient.describeConfigs(Collections.singletonList(configResource));
 
@@ -169,7 +174,7 @@ public class ConfiguratorTest {
         Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
         configurator.applyConfig();
 
-        TimeUnit.SECONDS.sleep(3);
+        sleep();
         ConfigResource configResource = new ConfigResource(ConfigResource.Type.BROKER, String.valueOf(brokerNode.id()));
         DescribeConfigsResult result = adminClient.describeConfigs(Collections.singletonList(configResource));
         org.apache.kafka.clients.admin.Config brokerConfig = result.all().get().get(configResource);
@@ -189,7 +194,7 @@ public class ConfiguratorTest {
         Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
         configurator.applyConfig();
 
-        TimeUnit.SECONDS.sleep(3);
+        sleep();
         for(Node node : nodes){
             ConfigResource configResource = new ConfigResource(ConfigResource.Type.BROKER, String.valueOf(node.id()));
             DescribeConfigsResult result = adminClient.describeConfigs(Collections.singletonList(configResource));
@@ -207,6 +212,7 @@ public class ConfiguratorTest {
         Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
         configurator.applyConfig();
 
+        sleep();
         DescribeAclsResult describeAclsResult = adminClient.describeAcls(new AclBindingFilter(ResourcePatternFilter.ANY, AccessControlEntryFilter.ANY));
 
         Assert.assertEquals(describeAclsResult.values().get().size(), 2);
@@ -222,6 +228,7 @@ public class ConfiguratorTest {
         Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
         configurator.applyConfig();
 
+        sleep();
         DescribeAclsResult describeAclsResult = adminClient.describeAcls(new AclBindingFilter(ResourcePatternFilter.ANY, AccessControlEntryFilter.ANY));
 
         Assert.assertEquals(describeAclsResult.values().get().size(), 2);
@@ -238,6 +245,7 @@ public class ConfiguratorTest {
         Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
         configurator.applyConfig();
 
+        sleep();
         DescribeAclsResult describeAclsResult = adminClient.describeAcls(new AclBindingFilter(ResourcePatternFilter.ANY, AccessControlEntryFilter.ANY));
 
         Assert.assertEquals(describeAclsResult.values().get().size(), 2);
@@ -256,6 +264,11 @@ public class ConfiguratorTest {
         AclBindingFilter all = new AclBindingFilter(ResourcePatternFilter.ANY, AccessControlEntryFilter.ANY);
         DeleteAclsResult result = adminClient.deleteAcls(Collections.singleton(all));
         result.all().get();
+        TimeUnit.SECONDS.sleep(1);
+    }
+
+    private void sleep() throws InterruptedException {
+        TimeUnit.SECONDS.sleep(3);
     }
 
 }
