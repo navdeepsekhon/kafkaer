@@ -1,19 +1,18 @@
 import co.navdeep.kafkaer.Configurator;
+import co.navdeep.kafkaer.model.Acl;
 import co.navdeep.kafkaer.model.Broker;
 import co.navdeep.kafkaer.model.Config;
 import co.navdeep.kafkaer.model.Topic;
 import co.navdeep.kafkaer.utils.Utils;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.kafka.clients.admin.AdminClient;
-import org.apache.kafka.clients.admin.DescribeConfigsResult;
-import org.apache.kafka.clients.admin.DescribeTopicsResult;
-import org.apache.kafka.clients.admin.TopicDescription;
+import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.Node;
+import org.apache.kafka.common.acl.AccessControlEntryFilter;
+import org.apache.kafka.common.acl.AclBindingFilter;
 import org.apache.kafka.common.config.ConfigResource;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.apache.kafka.common.resource.ResourcePatternFilter;
+import org.junit.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,6 +32,12 @@ public class ConfiguratorTest {
     public static void setup() throws ConfigurationException {
         Configuration properties = Utils.readProperties(PROPERTIES_LOCATION);
         adminClient = AdminClient.create(Utils.getClientConfig(properties));
+    }
+
+    @Before
+    @After
+    public void cleanup() throws ExecutionException, InterruptedException {
+        deleteAllAcls();
     }
 
     @Test
@@ -177,14 +182,66 @@ public class ConfiguratorTest {
             org.apache.kafka.clients.admin.Config brokerConfig = result.all().get().get(configResource);
             Assert.assertEquals(brokerConfig.get("max.connections.per.ip").value(), "10000");
         }
-
     }
+
+    @Test
+    public void testCreateAclsStructured() throws ConfigurationException, ExecutionException, InterruptedException {
+        Config config = new Config();
+        config.getAcls().add(new Acl("User:joe,Topic,LITERAL,test,Read,Allow,*"));
+        config.getAcls().add(new Acl("User:jon,Cluster,LITERAL,kafka-cluster,Create,Allow,*"));
+
+        Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
+        configurator.applyConfig();
+
+        DescribeAclsResult describeAclsResult = adminClient.describeAcls(new AclBindingFilter(ResourcePatternFilter.ANY, AccessControlEntryFilter.ANY));
+
+        Assert.assertEquals(describeAclsResult.values().get().size(), 2);
+        Assert.assertArrayEquals(describeAclsResult.values().get().toArray(), config.getAclBindings().toArray());
+    }
+
+    @Test
+    public void testCreateAclsFromStrings() throws ExecutionException, InterruptedException, ConfigurationException {
+        Config config = new Config();
+        config.getAclStrings().add("User:joe,Topic,LITERAL,test,Read,Allow,*");
+        config.getAclStrings().add("User:jon,Cluster,LITERAL,kafka-cluster,Create,Allow,*");
+
+        Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
+        configurator.applyConfig();
+
+        DescribeAclsResult describeAclsResult = adminClient.describeAcls(new AclBindingFilter(ResourcePatternFilter.ANY, AccessControlEntryFilter.ANY));
+
+        Assert.assertEquals(describeAclsResult.values().get().size(), 2);
+        Assert.assertArrayEquals(describeAclsResult.values().get().toArray(), config.getAclBindings().toArray());
+    }
+
+
+    @Test
+    public void testCreateAclsMix() throws ConfigurationException, ExecutionException, InterruptedException {
+        Config config = new Config();
+        config.getAclStrings().add("User:joe,Topic,LITERAL,test,Read,Allow,*");
+        config.getAcls().add(new Acl("User:jon,Cluster,LITERAL,kafka-cluster,Create,Allow,*"));
+
+        Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
+        configurator.applyConfig();
+
+        DescribeAclsResult describeAclsResult = adminClient.describeAcls(new AclBindingFilter(ResourcePatternFilter.ANY, AccessControlEntryFilter.ANY));
+
+        Assert.assertEquals(describeAclsResult.values().get().size(), 2);
+        Assert.assertArrayEquals(describeAclsResult.values().get().toArray(), config.getAclBindings().toArray());
+    }
+
     private void compareWithKafkaTopic(Topic topic) throws ExecutionException, InterruptedException {
         DescribeTopicsResult result = adminClient.describeTopics(Collections.singletonList(topic.getName()));
         TopicDescription kafkaTopic = result.all().get().get(topic.getName());
         Assert.assertNotNull(kafkaTopic);
         Assert.assertEquals(kafkaTopic.partitions().size(), topic.getPartitions());
         Assert.assertEquals(kafkaTopic.partitions().get(0).replicas().size(), topic.getReplicationFactor());
+    }
+
+    private void deleteAllAcls() throws ExecutionException, InterruptedException {
+        AclBindingFilter all = new AclBindingFilter(ResourcePatternFilter.ANY, AccessControlEntryFilter.ANY);
+        DeleteAclsResult result = adminClient.deleteAcls(Collections.singleton(all));
+        result.all().get();
     }
 
 }

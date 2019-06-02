@@ -13,6 +13,7 @@ import org.apache.commons.text.StringSubstitutor;
 import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.Node;
+import org.apache.kafka.common.acl.AclBinding;
 import org.apache.kafka.common.config.ConfigResource;
 
 import java.io.File;
@@ -42,6 +43,15 @@ public class Configurator {
     public void applyConfig() throws ExecutionException, InterruptedException {
         configureTopics();
         configureBrokers();
+        configureAcls();
+    }
+
+    public void configureAcls() throws ExecutionException, InterruptedException {
+        List<AclBinding> bindings = config.getAclBindings();
+        if(bindings.isEmpty()) return;
+
+        CreateAclsResult result = adminClient.createAcls(bindings);
+        result.all().get();
     }
 
     public void configureBrokers() throws ExecutionException, InterruptedException {
