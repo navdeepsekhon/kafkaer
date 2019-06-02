@@ -89,7 +89,11 @@ configurator.applyConfig();
           "sasl.login.refresh.window.jitter": "0.05"
         }
       }
-    ]
+    ],
+    "aclStrings": [
+        "User:joe,Topic,LITERAL,test,Read,Allow,*",
+        "User:jon,Cluster,LITERAL,kafka-cluster,Create,Allow,*"
+      ]
 }
 
 ```
@@ -123,7 +127,43 @@ NOTE: If a broker id is provided, the update is made only on that broker. If no 
 Cluster-wide configs must be without an id.
 
 ## ACLs
-coming soon
+You can provide the ACLs to create in one of two formats:
+
+Structured list:
+```json
+"acls" : [
+    {
+      "principal": "User:joe",
+      "resourceType": "Topic",
+      "patternType": "LITERAL",
+      "resourceName": "test",
+      "operation": "Read",
+      "permissionType": "Allow",
+      "host": "*"
+    },
+    {
+          "principal": "User:jon",
+          "resourceType": "Cluster",
+          "patternType": "LITERAL",
+          "resourceName": "kafka-cluster",
+          "operation": "Create",
+          "permissionType": "Allow",
+          "host": "*"
+        }
+  ]
+```
+
+As a list of strings:
+```json
+//Format: "principal,resourceType,patternType,resourceName,operation,permissionType,host"
+
+"aclStrings": [
+    "User:joe,Topic,LITERAL,test,Read,Allow,*",
+    "User:jon,Cluster,LITERAL,kafka-cluster,Create,Allow,*"
+  ]
+```
+
+All the values are case insensitive.
 
 ## Variables in kafka-config.json 
 To allow for deployments across different environments, kafka-config.json allows you to specify variables for values that will be replaced with values from the properties file. In the example above the topic name `withSuffix-${topic.suffix}` will be replaced with `withSuffix-iamasuffix` using the value of `topic.suffix` from props. 
