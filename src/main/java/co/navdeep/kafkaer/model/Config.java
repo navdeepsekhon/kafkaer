@@ -30,7 +30,7 @@ public class Config {
             bindings.add(new Acl(acl).toKafkaAclBinding());
         }
 
-        return getAclBindings();
+        return bindings;
     }
     public List<String> getAllTopicNames(){
         List<String> names = new ArrayList<>();
