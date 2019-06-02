@@ -20,7 +20,7 @@ jobs:
          KAFKA_PORT: 9092
          KAFKA_ZOOKEEPER_CONNECT: localhost:2181
          KAFKA_DELETE_TOPIC_ENABLE: true
-         KAFKA_SUPER_USER: User:ANONYMOUS
+         KAFKA_SUPER_USERS: User:ANONYMOUS
          KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
       - image: wurstmeister/kafka:2.12-2.2.0
         environment:
@@ -29,7 +29,7 @@ jobs:
          KAFKA_PORT: 9093
          KAFKA_ZOOKEEPER_CONNECT: localhost:2181
          KAFKA_DELETE_TOPIC_ENABLE: true
-         KAFKA_SUPER_USER: User:ANONYMOUS
+         KAFKA_SUPER_USERS: User:ANONYMOUS
          KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
 
     working_directory: ~/repo
