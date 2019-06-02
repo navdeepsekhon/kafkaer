@@ -15,10 +15,7 @@ import org.apache.kafka.common.resource.ResourcePatternFilter;
 import org.junit.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -45,10 +42,27 @@ public class ConfiguratorTest {
         Configurator configurator = new Configurator(PROPERTIES_LOCATION, CONFIG_LOCATION);
         Config config = configurator.getConfig();
         Assert.assertFalse(config.getTopics().isEmpty());
+        Assert.assertEquals(config.getTopics().size(), 2);
         Assert.assertEquals(config.getTopics().get(0).getName(), "withSuffix-iamasuffix");
         Assert.assertEquals(config.getTopics().get(0).getPartitions(), 1);
         Assert.assertEquals(config.getTopics().get(0).getReplicationFactor(), 1);
         Assert.assertEquals(config.getTopics().get(0).getConfigs().get("compression.type"), "gzip");
+
+        Assert.assertEquals(config.getBrokers().size(), 1);
+        Assert.assertEquals(config.getBrokers().get(0).getConfig().get("sasl.login.refresh.window.jitter"), "0.05");
+
+
+        Assert.assertEquals(config.getAcls().size(), 1);
+        Assert.assertEquals(config.getAcls().get(0).getPrincipal(), "User:joe");
+        Assert.assertEquals(config.getAcls().get(0).getResourceType(), "Topic");
+        Assert.assertEquals(config.getAcls().get(0).getPatternType(), "LITERAL");
+        Assert.assertEquals(config.getAcls().get(0).getResourceName(), "test");
+        Assert.assertEquals(config.getAcls().get(0).getOperation(), "Read");
+        Assert.assertEquals(config.getAcls().get(0).getPermissionType(), "Allow");
+        Assert.assertEquals(config.getAcls().get(0).getHost(), "*");
+
+        Assert.assertEquals(config.getAclStrings().size(), 2);
+        Assert.assertTrue(config.getAclStrings().containsAll(Arrays.asList("User:joe,Topic,LITERAL,test,Read,Allow,*", "User:jon,Cluster,LITERAL,kafka-cluster,Create,Allow,*")));
     }
 
     @Test

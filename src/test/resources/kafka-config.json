@@ -9,6 +9,38 @@
         "cleanup.policy": "delete",
         "delete.retention.ms": "86400000"
       }
+    },
+    {
+      "name": "test",
+      "partitions": 1,
+      "replicationFactor": 1,
+      "configs": {
+        "compression.type": "gzip",
+        "cleanup.policy": "compact"
+      }
     }
+  ],
+  "brokers": [
+    {
+      "id": "1",
+      "config": {
+        "sasl.login.refresh.window.jitter": "0.05"
+      }
+    }
+  ],
+  "acls" : [
+    {
+      "principal": "User:joe",
+      "resourceType": "Topic",
+      "patternType": "LITERAL",
+      "resourceName": "test",
+      "operation": "Read",
+      "permissionType": "Allow",
+      "host": "*"
+    }
+  ],
+  "aclStrings": [
+    "User:joe,Topic,LITERAL,test,Read,Allow,*",
+    "User:jon,Cluster,LITERAL,kafka-cluster,Create,Allow,*"
   ]
 }
