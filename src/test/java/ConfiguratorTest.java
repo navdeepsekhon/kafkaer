@@ -1,25 +1,21 @@
 import co.navdeep.kafkaer.Configurator;
+import co.navdeep.kafkaer.model.Acl;
 import co.navdeep.kafkaer.model.Broker;
 import co.navdeep.kafkaer.model.Config;
 import co.navdeep.kafkaer.model.Topic;
 import co.navdeep.kafkaer.utils.Utils;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.kafka.clients.admin.AdminClient;
-import org.apache.kafka.clients.admin.DescribeConfigsResult;
-import org.apache.kafka.clients.admin.DescribeTopicsResult;
-import org.apache.kafka.clients.admin.TopicDescription;
+import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.Node;
+import org.apache.kafka.common.acl.AccessControlEntryFilter;
+import org.apache.kafka.common.acl.AclBindingFilter;
 import org.apache.kafka.common.config.ConfigResource;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.apache.kafka.common.resource.ResourcePatternFilter;
+import org.junit.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -35,15 +31,38 @@ public class ConfiguratorTest {
         adminClient = AdminClient.create(Utils.getClientConfig(properties));
     }
 
+    @Before
+    @After
+    public void cleanup() throws ExecutionException, InterruptedException {
+        deleteAllAcls();
+    }
+
     @Test
     public void testReadConfig() throws IOException, ConfigurationException {
         Configurator configurator = new Configurator(PROPERTIES_LOCATION, CONFIG_LOCATION);
         Config config = configurator.getConfig();
         Assert.assertFalse(config.getTopics().isEmpty());
+        Assert.assertEquals(config.getTopics().size(), 2);
         Assert.assertEquals(config.getTopics().get(0).getName(), "withSuffix-iamasuffix");
         Assert.assertEquals(config.getTopics().get(0).getPartitions(), 1);
         Assert.assertEquals(config.getTopics().get(0).getReplicationFactor(), 1);
         Assert.assertEquals(config.getTopics().get(0).getConfigs().get("compression.type"), "gzip");
+
+        Assert.assertEquals(config.getBrokers().size(), 1);
+        Assert.assertEquals(config.getBrokers().get(0).getConfig().get("sasl.login.refresh.window.jitter"), "0.05");
+
+
+        Assert.assertEquals(config.getAcls().size(), 1);
+        Assert.assertEquals(config.getAcls().get(0).getPrincipal(), "User:joe");
+        Assert.assertEquals(config.getAcls().get(0).getResourceType(), "Topic");
+        Assert.assertEquals(config.getAcls().get(0).getPatternType(), "LITERAL");
+        Assert.assertEquals(config.getAcls().get(0).getResourceName(), "test");
+        Assert.assertEquals(config.getAcls().get(0).getOperation(), "Read");
+        Assert.assertEquals(config.getAcls().get(0).getPermissionType(), "Allow");
+        Assert.assertEquals(config.getAcls().get(0).getHost(), "*");
+
+        Assert.assertEquals(config.getAclStrings().size(), 2);
+        Assert.assertTrue(config.getAclStrings().containsAll(Arrays.asList("User:joe,Topic,LITERAL,test,Read,Allow,*", "User:jon,Cluster,LITERAL,kafka-cluster,Create,Allow,*")));
     }
 
     @Test
@@ -56,6 +75,7 @@ public class ConfiguratorTest {
         Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
         configurator.applyConfig();
 
+        sleep();
         compareWithKafkaTopic(topic);
     }
 
@@ -72,6 +92,7 @@ public class ConfiguratorTest {
         Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
         configurator.applyConfig();
 
+        sleep();
         compareWithKafkaTopic(topic);
         compareWithKafkaTopic(topic2);
     }
@@ -86,6 +107,7 @@ public class ConfiguratorTest {
         Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
         configurator.applyConfig();
 
+        sleep();
         ConfigResource configResource = new ConfigResource(ConfigResource.Type.TOPIC, topic.getName());
         DescribeConfigsResult result = adminClient.describeConfigs(Collections.singletonList(configResource));
 
@@ -104,6 +126,7 @@ public class ConfiguratorTest {
         Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
         configurator.applyConfig();
 
+        sleep();
         compareWithKafkaTopic(topic);
 
         topic.setPartitions(2);
@@ -122,6 +145,7 @@ public class ConfiguratorTest {
         Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
         configurator.applyConfig();
 
+        sleep();
         ConfigResource configResource = new ConfigResource(ConfigResource.Type.TOPIC, topic.getName());
         DescribeConfigsResult result = adminClient.describeConfigs(Collections.singletonList(configResource));
 
@@ -150,7 +174,7 @@ public class ConfiguratorTest {
         Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
         configurator.applyConfig();
 
-        TimeUnit.SECONDS.sleep(3);
+        sleep();
         ConfigResource configResource = new ConfigResource(ConfigResource.Type.BROKER, String.valueOf(brokerNode.id()));
         DescribeConfigsResult result = adminClient.describeConfigs(Collections.singletonList(configResource));
         org.apache.kafka.clients.admin.Config brokerConfig = result.all().get().get(configResource);
@@ -170,21 +194,81 @@ public class ConfiguratorTest {
         Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
         configurator.applyConfig();
 
-        TimeUnit.SECONDS.sleep(3);
+        sleep();
         for(Node node : nodes){
             ConfigResource configResource = new ConfigResource(ConfigResource.Type.BROKER, String.valueOf(node.id()));
             DescribeConfigsResult result = adminClient.describeConfigs(Collections.singletonList(configResource));
             org.apache.kafka.clients.admin.Config brokerConfig = result.all().get().get(configResource);
             Assert.assertEquals(brokerConfig.get("max.connections.per.ip").value(), "10000");
         }
-
     }
+
+    @Test
+    public void testCreateAclsStructured() throws ConfigurationException, ExecutionException, InterruptedException {
+        Config config = new Config();
+        config.getAcls().add(new Acl("User:joe,Topic,LITERAL,test,Read,Allow,*"));
+        config.getAcls().add(new Acl("User:jon,Cluster,LITERAL,kafka-cluster,Create,Allow,*"));
+
+        Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
+        configurator.applyConfig();
+
+        sleep();
+        DescribeAclsResult describeAclsResult = adminClient.describeAcls(new AclBindingFilter(ResourcePatternFilter.ANY, AccessControlEntryFilter.ANY));
+
+        Assert.assertEquals(describeAclsResult.values().get().size(), 2);
+        Assert.assertTrue(describeAclsResult.values().get().containsAll(config.getAclBindings()));
+    }
+
+    @Test
+    public void testCreateAclsFromStrings() throws ExecutionException, InterruptedException, ConfigurationException {
+        Config config = new Config();
+        config.getAclStrings().add("User:joe,Topic,LITERAL,test,Read,Allow,*");
+        config.getAclStrings().add("User:jon,Cluster,LITERAL,kafka-cluster,Create,Allow,*");
+
+        Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
+        configurator.applyConfig();
+
+        sleep();
+        DescribeAclsResult describeAclsResult = adminClient.describeAcls(new AclBindingFilter(ResourcePatternFilter.ANY, AccessControlEntryFilter.ANY));
+
+        Assert.assertEquals(describeAclsResult.values().get().size(), 2);
+        Assert.assertTrue(describeAclsResult.values().get().containsAll(config.getAclBindings()));
+    }
+
+
+    @Test
+    public void testCreateAclsMix() throws ConfigurationException, ExecutionException, InterruptedException {
+        Config config = new Config();
+        config.getAclStrings().add("User:joe,Topic,LITERAL,test,Read,Allow,*");
+        config.getAcls().add(new Acl("User:jon,Cluster,LITERAL,kafka-cluster,Create,Allow,*"));
+
+        Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
+        configurator.applyConfig();
+
+        sleep();
+        DescribeAclsResult describeAclsResult = adminClient.describeAcls(new AclBindingFilter(ResourcePatternFilter.ANY, AccessControlEntryFilter.ANY));
+
+        Assert.assertEquals(describeAclsResult.values().get().size(), 2);
+        Assert.assertTrue(describeAclsResult.values().get().containsAll(config.getAclBindings()));
+    }
+
     private void compareWithKafkaTopic(Topic topic) throws ExecutionException, InterruptedException {
         DescribeTopicsResult result = adminClient.describeTopics(Collections.singletonList(topic.getName()));
         TopicDescription kafkaTopic = result.all().get().get(topic.getName());
         Assert.assertNotNull(kafkaTopic);
         Assert.assertEquals(kafkaTopic.partitions().size(), topic.getPartitions());
         Assert.assertEquals(kafkaTopic.partitions().get(0).replicas().size(), topic.getReplicationFactor());
+    }
+
+    private void deleteAllAcls() throws ExecutionException, InterruptedException {
+        AclBindingFilter all = new AclBindingFilter(ResourcePatternFilter.ANY, AccessControlEntryFilter.ANY);
+        DeleteAclsResult result = adminClient.deleteAcls(Collections.singleton(all));
+        result.all().get();
+        TimeUnit.SECONDS.sleep(1);
+    }
+
+    private void sleep() throws InterruptedException {
+        TimeUnit.SECONDS.sleep(3);
     }
 
 }

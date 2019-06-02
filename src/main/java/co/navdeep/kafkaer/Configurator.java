@@ -4,23 +4,20 @@ import co.navdeep.kafkaer.model.Broker;
 import co.navdeep.kafkaer.model.Config;
 import co.navdeep.kafkaer.model.Topic;
 import co.navdeep.kafkaer.utils.Utils;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.text.StringSubstitutor;
 import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.KafkaFuture;
-import org.apache.kafka.common.Node;
+import org.apache.kafka.common.acl.AclBinding;
 import org.apache.kafka.common.config.ConfigResource;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Data
 public class Configurator {
@@ -42,6 +39,15 @@ public class Configurator {
     public void applyConfig() throws ExecutionException, InterruptedException {
         configureTopics();
         configureBrokers();
+        configureAcls();
+    }
+
+    public void configureAcls() throws ExecutionException, InterruptedException {
+        List<AclBinding> bindings = config.getAclBindings();
+        if(bindings.isEmpty()) return;
+
+        CreateAclsResult result = adminClient.createAcls(bindings);
+        result.all().get();
     }
 
     public void configureBrokers() throws ExecutionException, InterruptedException {
