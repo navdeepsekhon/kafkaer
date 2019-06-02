@@ -24,9 +24,10 @@ Current features:
 * Update configurations and partitions for existing topics
 * Update configs for a specific broker
 * Update configs for entire kafka cluster
+* Create/update Access control lists (ACLs)
 
 Future features:
-* Create/update Access control lists (ACLs)
+
 * Copy kafka clusters by creating kafka-config.json from existing cluster
 
 
@@ -40,14 +41,14 @@ java -jar kafkaer.jar propertiesLocation configLocation
 ## Include jar as dep in project from maven central
 Gradle:
 ```json
-compile "co.navdeep:kafkaer:0.1"
+compile "co.navdeep:kafkaer:1.0"
 ```
 Maven:
 ```xml
 <dependency>
     <groupId>co.navdeep</groupId>
     <artifactId>kafkaer</artifactId>
-    <version>0.1</version>
+    <version>1.0</version>
 </dependency>
 ```
 
