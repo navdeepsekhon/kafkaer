@@ -27,6 +27,8 @@ jobs:
          KAFKA_PORT: 9093
          KAFKA_ZOOKEEPER_CONNECT: localhost:2181
          KAFKA_DELETE_TOPIC_ENABLE: true
+         KAFKA_SUPER_USER: User:ANONYMOUS
+         KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
 
     working_directory: ~/repo
 
