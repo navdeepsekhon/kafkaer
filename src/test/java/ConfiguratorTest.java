@@ -196,7 +196,7 @@ public class ConfiguratorTest {
         DescribeAclsResult describeAclsResult = adminClient.describeAcls(new AclBindingFilter(ResourcePatternFilter.ANY, AccessControlEntryFilter.ANY));
 
         Assert.assertEquals(describeAclsResult.values().get().size(), 2);
-        Assert.assertArrayEquals(describeAclsResult.values().get().toArray(), config.getAclBindings().toArray());
+        Assert.assertTrue(describeAclsResult.values().get().containsAll(config.getAclBindings()));
     }
 
     @Test
@@ -211,7 +211,7 @@ public class ConfiguratorTest {
         DescribeAclsResult describeAclsResult = adminClient.describeAcls(new AclBindingFilter(ResourcePatternFilter.ANY, AccessControlEntryFilter.ANY));
 
         Assert.assertEquals(describeAclsResult.values().get().size(), 2);
-        Assert.assertArrayEquals(describeAclsResult.values().get().toArray(), config.getAclBindings().toArray());
+        Assert.assertTrue(describeAclsResult.values().get().containsAll(config.getAclBindings()));
     }
 
 
@@ -227,7 +227,7 @@ public class ConfiguratorTest {
         DescribeAclsResult describeAclsResult = adminClient.describeAcls(new AclBindingFilter(ResourcePatternFilter.ANY, AccessControlEntryFilter.ANY));
 
         Assert.assertEquals(describeAclsResult.values().get().size(), 2);
-        Assert.assertArrayEquals(describeAclsResult.values().get().toArray(), config.getAclBindings().toArray());
+        Assert.assertTrue(describeAclsResult.values().get().containsAll(config.getAclBindings()));
     }
 
     private void compareWithKafkaTopic(Topic topic) throws ExecutionException, InterruptedException {
