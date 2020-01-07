@@ -11,6 +11,7 @@ import org.apache.kafka.common.Node;
 import org.apache.kafka.common.acl.AccessControlEntryFilter;
 import org.apache.kafka.common.acl.AclBindingFilter;
 import org.apache.kafka.common.config.ConfigResource;
+import org.apache.kafka.common.errors.UnknownTopicOrPartitionException;
 import org.apache.kafka.common.resource.ResourcePatternFilter;
 import org.junit.*;
 
@@ -252,7 +253,7 @@ public class ConfiguratorTest {
         Assert.assertTrue(describeAclsResult.values().get().containsAll(config.getAclBindings()));
     }
 
-    @Test
+    @Test(expected = UnknownTopicOrPartitionException.class)
     public void testWipe() throws ConfigurationException, ExecutionException, InterruptedException {
         Config config = new Config();
         String topicName = UUID.randomUUID().toString();
@@ -267,7 +268,7 @@ public class ConfiguratorTest {
         configurator.wipeTopics();
 
         DescribeTopicsResult result = adminClient.describeTopics(Collections.singletonList(topic.getName()));
-        Assert.assertFalse(result.all().get().containsKey(topic.getName()));
+        result.all().get().containsKey(topic.getName());
 
     }
 
