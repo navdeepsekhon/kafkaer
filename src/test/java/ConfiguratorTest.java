@@ -252,6 +252,25 @@ public class ConfiguratorTest {
         Assert.assertTrue(describeAclsResult.values().get().containsAll(config.getAclBindings()));
     }
 
+    @Test
+    public void testWipe() throws ConfigurationException, ExecutionException, InterruptedException {
+        Config config = new Config();
+        String topicName = UUID.randomUUID().toString();
+        Topic topic = new Topic(topicName, 1, (short)1);
+        config.getTopics().add(topic);
+
+        Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
+        configurator.applyConfig();
+        sleep();
+        compareWithKafkaTopic(topic);
+
+        configurator.wipeTopics();
+
+        DescribeTopicsResult result = adminClient.describeTopics(Collections.singletonList(topic.getName()));
+        Assert.assertFalse(result.all().get().containsKey(topic.getName()));
+
+    }
+
     private void compareWithKafkaTopic(Topic topic) throws ExecutionException, InterruptedException {
         DescribeTopicsResult result = adminClient.describeTopics(Collections.singletonList(topic.getName()));
         TopicDescription kafkaTopic = result.all().get().get(topic.getName());
