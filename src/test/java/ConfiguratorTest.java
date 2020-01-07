@@ -253,7 +253,7 @@ public class ConfiguratorTest {
         Assert.assertTrue(describeAclsResult.values().get().containsAll(config.getAclBindings()));
     }
 
-    @Test(expected = UnknownTopicOrPartitionException.class)
+    @Test
     public void testWipe() throws ConfigurationException, ExecutionException, InterruptedException {
         Config config = new Config();
         String topicName = UUID.randomUUID().toString();
@@ -267,9 +267,7 @@ public class ConfiguratorTest {
 
         configurator.wipeTopics();
 
-        DescribeTopicsResult result = adminClient.describeTopics(Collections.singletonList(topic.getName()));
-        result.all().get().containsKey(topic.getName());
-
+        Assert.assertFalse(adminClient.listTopics().names().get().contains(topic.getName()));
     }
 
     private void compareWithKafkaTopic(Topic topic) throws ExecutionException, InterruptedException {
