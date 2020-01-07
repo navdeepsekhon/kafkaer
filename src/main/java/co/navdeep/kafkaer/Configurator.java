@@ -36,6 +36,11 @@ public class Configurator {
         config = c;
         adminClient = AdminClient.create(Utils.getClientConfig(properties));
     }
+
+    public void wipeTopics() throws ExecutionException, InterruptedException {
+        DeleteTopicsResult result = adminClient.deleteTopics(config.getAllTopicNames());
+        result.all().get();
+    }
     public void applyConfig() throws ExecutionException, InterruptedException {
         configureTopics();
         configureBrokers();

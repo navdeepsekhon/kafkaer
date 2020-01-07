@@ -1,18 +1,29 @@
 package co.navdeep.kafkaer;
 
-import org.apache.commons.configuration2.ex.ConfigurationException;
-
-import java.io.IOException;
-import java.util.concurrent.ExecutionException;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
 
 public class App {
-    public static void main(String[] args) throws IOException, ConfigurationException, ExecutionException, InterruptedException {
-        if(args.length != 2) {
-            System.out.println("Missing required arguments - propertiesLocation, configLocation");
+    public static void main(String[] a) throws Exception {
+        Args args = new Args();
+        CmdLineParser parser = new CmdLineParser(args);
+        try {
+            parser.parseArgument(a);
+        } catch(CmdLineException e){
+            throw new Exception("Invalid command line arguments", e);
+        }
+        if(args.isHelp()){
+            parser.printUsage(System.out);
             return;
         }
+        if(args.getProperties() == null || args.getConfig() == null) {
+            throw new RuntimeException("Missing required arguments - propertiesLocation, configLocation");
+        }
 
-        Configurator configurator = new Configurator(args[0], args[1]);
-        configurator.applyConfig();
+        Configurator configurator = new Configurator(args.getProperties(), args.getConfig());
+        if(args.isWipe())
+            configurator.wipeTopics();
+        else
+            configurator.applyConfig();
     }
 }

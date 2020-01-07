@@ -11,6 +11,7 @@
     - [ACL configurations](#acls)
  - [Properties file](#properties-file)
  - [Kafka connection configurations](#admin-client-configs)
+ - [Delete created topics (--wipe)](#delete-created-topics)
  - [Contributions](#contributions)
 
  
@@ -25,6 +26,7 @@ Current features:
 * Update configs for a specific broker
 * Update configs for entire kafka cluster
 * Create/update Access control lists (ACLs)
+* Delete all topics created by tool
 
 Future features:
 
@@ -35,20 +37,20 @@ Future features:
 ## Executable jar
 Get the jar from [releases](https://github.com/navdeepsekhon/kafkaer/releases)
 ```
-java -jar kafkaer.jar propertiesLocation configLocation
+java -jar kafkaer.jar --properties propertiesLocation --config configLocation
 ```
 
 ## Include jar as dep in project from maven central
 Gradle:
 ```json
-compile "co.navdeep:kafkaer:1.0"
+compile "co.navdeep:kafkaer:1.1"
 ```
 Maven:
 ```xml
 <dependency>
     <groupId>co.navdeep</groupId>
     <artifactId>kafkaer</artifactId>
-    <version>1.0</version>
+    <version>1.1</version>
 </dependency>
 ```
 
@@ -189,6 +191,10 @@ topic.suffix=iamasuffix
 # Admin Client configs
 Kafkaer uses `AdminClient` API to connect to Kafka.
 All the admin client configs can be provided in the same properties file. Property name must have prefix `kafkaer.` followed by one of `AdminClientConfig`. For example, to specify `bootstrap.servers` add a property called `kafkaer.bootstrap.servers`. All the admin client configs are supported. [See the list of configs here](https://github.com/apache/kafka/blob/trunk/clients/src/main/java/org/apache/kafka/clients/admin/AdminClientConfig.java)
+
+# Delete created topics
+
+Provide the `--wipe` flag to delete all the topics listed in the config.json
 
 # Contributions
 Merge requests welcome. Please create an issue with change details and link it to your merge request.
