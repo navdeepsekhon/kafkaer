@@ -11,7 +11,7 @@
     - [ACL configurations](#acls)
  - [Properties file](#properties-file)
  - [Kafka connection configurations](#admin-client-configs)
- - [Delete created topics (--wipe)](#delete-create-topics)
+ - [Delete created topics (--wipe)](#delete-created-topics)
  - [Contributions](#contributions)
 
  
@@ -43,7 +43,7 @@ java -jar kafkaer.jar --properties propertiesLocation --config configLocation
 ## Include jar as dep in project from maven central
 Gradle:
 ```json
-compile "co.navdeep:kafkaer:1.0"
+compile "co.navdeep:kafkaer:1.1"
 ```
 Maven:
 ```xml
