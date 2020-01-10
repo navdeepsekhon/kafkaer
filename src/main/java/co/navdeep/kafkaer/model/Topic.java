@@ -18,6 +18,7 @@ public class Topic {
     @NonNull private int partitions;
     @NonNull private short replicationFactor;
     private Map<String, String> configs;
+    private String description;
 
     public NewTopic toNewTopic(){
         NewTopic newTopic = new NewTopic(name, partitions, replicationFactor);

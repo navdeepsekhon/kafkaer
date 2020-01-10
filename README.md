@@ -69,6 +69,7 @@ configurator.applyConfig();
       "name": "withSuffix-${topic.suffix}",
       "partitions": 3,
       "replicationFactor": 3,
+      "description": "This description is just for documentation. It does not affect the kafka cluster.",
       "configs": {
         "compression.type": "gzip",
         "cleanup.policy": "delete",
@@ -110,6 +111,8 @@ replicationFactor
 ```
 
 Rest of all the configs go inside the `configs` map. You can specify any/all of the [topic configurations listed in the kafka documentation](https://kafka.apache.org/documentation/#topicconfigs)
+
+`description` is optional. It is just for documentation purpose and is ignored by kafkaer.
 
 ## What if the topic already exists:
 ### Partitions:
