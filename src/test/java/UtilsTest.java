@@ -67,4 +67,16 @@ public class UtilsTest {
         Assert.assertEquals(config.getTopics().get(0).getName(), "withSuffix-t");
         Assert.assertEquals(config2.getTopics().get(0).getName(), "withSuffix-t2");
     }
+
+    @Test
+    public void readConfigWithDescriptinoTest() throws IOException {
+        co.navdeep.kafkaer.model.Config config = Utils.readConfig("src/test/resources/kafka-config-with-description.json", Collections.singletonMap("topic.suffix", "t"));
+        Assert.assertNotNull(config.getTopics().get(0).getDescription());
+    }
+
+    @Test
+    public void readConfigWithoutDescriptinoTest() throws IOException {
+        co.navdeep.kafkaer.model.Config config = Utils.readConfig("src/test/resources/kafka-config.json", Collections.singletonMap("topic.suffix", "t"));
+        Assert.assertNull(config.getTopics().get(0).getDescription());
+    }
 }

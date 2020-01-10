@@ -4,7 +4,7 @@
       "name": "withSuffix-${topic.suffix}",
       "partitions": 1,
       "replicationFactor": 1,
-      "description": "This is a description for a topic with a suffix.",
+      "description": "This is a description",
       "configs": {
         "compression.type": "gzip",
         "cleanup.policy": "delete",
@@ -15,7 +15,7 @@
       "name": "test",
       "partitions": 1,
       "replicationFactor": 1,
-      "description": "This description is just for documentation. It does not affect the kafka cluster",
+      "description": "Also description",
       "configs": {
         "compression.type": "gzip",
         "cleanup.policy": "compact"
