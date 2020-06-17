@@ -12,6 +12,7 @@
  - [Properties file](#properties-file)
  - [Kafka connection configurations](#admin-client-configs)
  - [Delete created topics (--wipe)](#delete-created-topics)
+ - [Debug (--debug)](#debug)
  - [Contributions](#contributions)
 
  
@@ -198,6 +199,10 @@ All the admin client configs can be provided in the same properties file. Proper
 # Delete created topics
 
 Provide the `--wipe` flag to delete all the topics listed in the config.json
+
+# Debug
+
+Use flag `--debug` for detailed logging
 
 # Contributions
 Merge requests welcome. Please create an issue with change details and link it to your merge request.
