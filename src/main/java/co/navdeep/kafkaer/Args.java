@@ -23,6 +23,9 @@ public class Args {
     @Option(name="--help", aliases= "-h", help = true, usage="list usage", handler =  BooleanOptionHandler.class)
     boolean help;
 
+    @Option(name="--debug", aliases = "-d", usage = "debug mode", handler = BooleanOptionHandler.class)
+    boolean debug;
+
     @Argument
     private List<String> arguments = new ArrayList<>();
 

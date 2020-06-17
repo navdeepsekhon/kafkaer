@@ -1,9 +1,9 @@
 import co.navdeep.kafkaer.Configurator;
 import co.navdeep.kafkaer.model.Acl;
 import co.navdeep.kafkaer.model.Broker;
-import co.navdeep.kafkaer.model.Config;
 import co.navdeep.kafkaer.model.Topic;
 import co.navdeep.kafkaer.utils.Utils;
+import co.navdeep.kafkaer.model.Config;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.kafka.clients.admin.*;
@@ -11,7 +11,6 @@ import org.apache.kafka.common.Node;
 import org.apache.kafka.common.acl.AccessControlEntryFilter;
 import org.apache.kafka.common.acl.AclBindingFilter;
 import org.apache.kafka.common.config.ConfigResource;
-import org.apache.kafka.common.errors.UnknownTopicOrPartitionException;
 import org.apache.kafka.common.resource.ResourcePatternFilter;
 import org.junit.*;
 
@@ -268,6 +267,23 @@ public class ConfiguratorTest {
         configurator.wipeTopics();
 
         Assert.assertFalse(adminClient.listTopics().names().get().contains(topic.getName()));
+    }
+
+    @Test
+    public void testNonExistingTopicWipeNoException() throws ConfigurationException {
+        Config config = new Config();
+        String topicName = UUID.randomUUID().toString();
+        Topic topic = new Topic(topicName, 1, (short)1);
+        config.getTopics().add(topic);
+
+        Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
+
+        try {
+            configurator.wipeTopics();
+        } catch(Exception e){
+            Assert.fail();
+            e.printStackTrace();
+        }
     }
 
     private void compareWithKafkaTopic(Topic topic) throws ExecutionException, InterruptedException {
