@@ -46,8 +46,17 @@ public class Configurator {
         logger.debug("Deleting topics");
         DeleteTopicsResult result = adminClient.deleteTopics(config.getAllTopicNames());
         for(String topic : result.values().keySet()){
-            logger.debug("Deleting topic: {}", topic);
-            result.values().get(topic).get();
+            try {
+                logger.debug("Deleting topic: {}", topic);
+                result.values().get(topic).get();
+            } catch(ExecutionException e){
+                if(e.getCause() instanceof UnknownTopicOrPartitionException){
+                    logger.debug("Unable to delete topic {} because it does not exist.", topic);
+                } else {
+                    throw e;
+                }
+            }
+
         }
     }
 
