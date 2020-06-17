@@ -11,6 +11,9 @@ import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.acl.AclBinding;
 import org.apache.kafka.common.config.ConfigResource;
+import org.apache.kafka.common.errors.UnknownTopicOrPartitionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -25,6 +28,8 @@ public class Configurator {
     private Config config;
     private AdminClient adminClient;
 
+    private static Logger logger = LoggerFactory.getLogger(Configurator.class);
+
     public Configurator(String propertiesLocation, String configLocation) throws ConfigurationException, IOException {
         properties = Utils.readProperties(propertiesLocation);
         config = Utils.readConfig(configLocation, Utils.propertiesToMap(properties));
@@ -38,9 +43,23 @@ public class Configurator {
     }
 
     public void wipeTopics() throws ExecutionException, InterruptedException {
+        logger.debug("Deleting topics");
         DeleteTopicsResult result = adminClient.deleteTopics(config.getAllTopicNames());
-        result.all().get();
+        for(String topic : result.values().keySet()){
+            try {
+                logger.debug("Deleting topic: {}", topic);
+                result.values().get(topic).get();
+            } catch(ExecutionException e){
+                if(e.getCause() instanceof UnknownTopicOrPartitionException){
+                    logger.debug("Unable to delete topic {} because it does not exist.", topic);
+                } else {
+                    throw e;
+                }
+            }
+
+        }
     }
+
     public void applyConfig() throws ExecutionException, InterruptedException {
         configureTopics();
         configureBrokers();
@@ -48,18 +67,30 @@ public class Configurator {
     }
 
     public void configureAcls() throws ExecutionException, InterruptedException {
+        logger.debug("Configuring ACLs");
         List<AclBinding> bindings = config.getAclBindings();
-        if(bindings.isEmpty()) return;
+        if(bindings.isEmpty()){
+            logger.debug("No ACLs defined in config. Nothing done.");
+            return;
+        }
 
         CreateAclsResult result = adminClient.createAcls(bindings);
-        result.all().get();
+        for(AclBinding binding : result.values().keySet()){
+            logger.debug("Creating ACL {}", binding);
+            result.values().get(binding).get();
+        }
     }
 
     public void configureBrokers() throws ExecutionException, InterruptedException {
-        if(!config.hasBrokerConfig()) return;
+        logger.debug("Configuring brokers");
+        if(!config.hasBrokerConfig()){
+            logger.debug("No broker configs defined. Nothing done.");
+            return;
+        }
 
         Map<ConfigResource, org.apache.kafka.clients.admin.Config> updateConfig = new HashMap<>();
         for(Broker broker : config.getBrokers()){
+            logger.debug("Applying broker config {}", broker);
             ConfigResource configResource = new ConfigResource(ConfigResource.Type.BROKER, broker.getId());
             updateConfig.put(configResource, broker.configsAsKafkaConfig());
         }
@@ -70,15 +101,23 @@ public class Configurator {
     }
 
     public void configureTopics() throws ExecutionException, InterruptedException {
+        logger.debug("Configuring topics");
         Map<String, KafkaFuture<TopicDescription>> topicResults = adminClient.describeTopics(config.getAllTopicNames()).values();
         for(Topic topic : config.getTopics()){
+            logger.debug("Topic config: {}", topic);
             try {
                 TopicDescription td = topicResults.get(topic.getName()).get();
+                logger.debug("Updating existing topic {}", topic.getName());
                 handleTopicPartitionsUpdate(td, topic);
                 handleTopicConfigUpdate(topic);
             } catch(ExecutionException e){
-                CreateTopicsResult result = adminClient.createTopics(Collections.singleton(topic.toNewTopic()));
-                result.all().get();
+                if(e.getCause() instanceof UnknownTopicOrPartitionException) {
+                    logger.debug("Creating new topic {}", topic.getName());
+                    CreateTopicsResult result = adminClient.createTopics(Collections.singleton(topic.toNewTopic()));
+                    result.all().get();
+                } else {
+                    throw(e);
+                }
             }
         }
     }
@@ -98,6 +137,7 @@ public class Configurator {
     private void handleTopicPartitionsUpdate(TopicDescription current, Topic topic) throws InterruptedException {
         try {
             if(current.partitions().size() < topic.getPartitions()){
+                logger.debug("Updating partition count for topic {} from [{}] to [{}]", topic.getName(), current.partitions().size(), topic.getPartitions());
                 CreatePartitionsResult result = adminClient.createPartitions(Collections.singletonMap(topic.getName(), NewPartitions.increaseTo(topic.getPartitions())));
                 result.all().get();
             } else if(current.partitions().size() > topic.getPartitions()){
