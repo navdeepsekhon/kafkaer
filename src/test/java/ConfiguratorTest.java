@@ -4,6 +4,8 @@ import co.navdeep.kafkaer.model.Broker;
 import co.navdeep.kafkaer.model.Topic;
 import co.navdeep.kafkaer.utils.Utils;
 import co.navdeep.kafkaer.model.Config;
+import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
+import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.kafka.clients.admin.*;
@@ -13,6 +15,9 @@ import org.apache.kafka.common.acl.AclBindingFilter;
 import org.apache.kafka.common.config.ConfigResource;
 import org.apache.kafka.common.resource.ResourcePatternFilter;
 import org.junit.*;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.util.*;
@@ -264,7 +269,34 @@ public class ConfiguratorTest {
         sleep();
         compareWithKafkaTopic(topic);
 
-        configurator.wipeTopics();
+        configurator.wipeTopics(true, false);
+
+        Assert.assertFalse(adminClient.listTopics().names().get().contains(topic.getName()));
+    }
+
+    @Test
+    public void testWipeWithSchemaWipe() throws ConfigurationException, ExecutionException, InterruptedException, IOException, RestClientException {
+        Config config = new Config();
+        String topicName = UUID.randomUUID().toString();
+        Topic topic = new Topic(topicName, 1, (short)1);
+        config.getTopics().add(topic);
+
+        Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
+        configurator.applyConfig();
+        sleep();
+        compareWithKafkaTopic(topic);
+
+        SchemaRegistryClient mock = Mockito.mock(SchemaRegistryClient.class);
+        configurator.setSchemaRegistryClient(mock);
+
+        String subjectName = topicName + "-value";
+        Mockito.when(mock.getAllSubjects()).thenReturn(Collections.singletonList(subjectName));
+        Mockito.when(mock.deleteSubject(subjectName)).thenReturn(Collections.singletonList(1));
+
+        configurator.wipeTopics(true, true);
+
+        Mockito.verify(mock).getAllSubjects();
+        Mockito.verify(mock).deleteSubject(ArgumentMatchers.eq(subjectName));
 
         Assert.assertFalse(adminClient.listTopics().names().get().contains(topic.getName()));
     }
@@ -279,11 +311,26 @@ public class ConfiguratorTest {
         Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
 
         try {
-            configurator.wipeTopics();
+            configurator.wipeTopics(true, false);
         } catch(Exception e){
             Assert.fail();
             e.printStackTrace();
         }
+    }
+
+    @Test
+    public void testWipeSchema() throws ConfigurationException, IOException, RestClientException {
+        Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), new Config());
+        SchemaRegistryClient mock = Mockito.mock(SchemaRegistryClient.class);
+        configurator.setSchemaRegistryClient(mock);
+
+        Mockito.when(mock.getAllSubjects()).thenReturn(Collections.singletonList("x-value"));
+        Mockito.when(mock.deleteSubject("x-value")).thenReturn(Collections.singletonList(1));
+
+        configurator.wipeSchema("x");
+
+        Mockito.verify(mock).getAllSubjects();
+        Mockito.verify(mock).deleteSubject(ArgumentMatchers.eq("x-value"));
     }
 
     private void compareWithKafkaTopic(Topic topic) throws ExecutionException, InterruptedException {

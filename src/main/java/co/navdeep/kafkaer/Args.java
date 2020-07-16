@@ -1,5 +1,6 @@
 package co.navdeep.kafkaer;
 
+import co.navdeep.kafkaer.utils.Utils;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.args4j.Argument;
@@ -19,6 +20,12 @@ public class Args {
 
     @Option(name="--wipe", usage="Wipe all topics", handler = BooleanOptionHandler.class)
     boolean wipe;
+
+    @Option(name="--wipe-schemas", usage="Used with --wipe. Will delete corresponding schemas from schema registry. Will use properties kafkaer.schema.registry.* to connect to schema registry", handler = BooleanOptionHandler.class)
+    boolean wipeSchemas;
+
+    @Option(name="--confirm-delete", usage="Used with --wipe. Will wait for all brokers to sync up to ensure topic is deleted from all. Default max wait 60s. Configure using " + Utils.MAX_DELETE_CONFIRM_WAIT_CONFIG, handler = BooleanOptionHandler.class)
+    boolean confirmDelete;
 
     @Option(name="--help", aliases= "-h", help = true, usage="list usage", handler =  BooleanOptionHandler.class)
     boolean help;

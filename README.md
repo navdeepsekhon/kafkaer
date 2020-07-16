@@ -12,6 +12,7 @@
  - [Properties file](#properties-file)
  - [Kafka connection configurations](#admin-client-configs)
  - [Delete created topics (--wipe)](#delete-created-topics)
+ - [Delete schemas from schema registry (--wipe-schemas)](#delete-schemas)
  - [Debug (--debug)](#debug)
  - [Contributions](#contributions)
 
@@ -28,10 +29,7 @@ Current features:
 * Update configs for entire kafka cluster
 * Create/update Access control lists (ACLs)
 * Delete all topics created by tool
-
-Future features:
-
-* Copy kafka clusters by creating kafka-config.json from existing cluster
+* Delete all schemas from schema registry when deleting topics
 
 
 # Two ways to use:
@@ -199,6 +197,19 @@ All the admin client configs can be provided in the same properties file. Proper
 # Delete created topics
 
 Provide the `--wipe` flag to delete all the topics listed in the config.json
+
+# Delete Schemas
+
+If you're using [confluent schema registry](https://docs.confluent.io/current/schema-registry/develop/api.html) or other compatible schema registry to store topic schemas, kafkaer can delete the associated schemas when deleting the topics.
+
+Use flag `--wipe-schemas` with `--wipe` to delete schemas.
+
+Provide the schema registry url with property `kafkaer.schema.registry.url`. Other schema registry properties can be provided by prefixing `kafkaer.`.
+```
+kafkaer.schema.registry.security.protocol=SSL
+kafkaer.schema.registry.ssl.truststore.location=...
+...
+```
 
 # Debug
 
