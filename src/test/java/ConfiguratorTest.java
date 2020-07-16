@@ -33,13 +33,13 @@ public class ConfiguratorTest {
     @BeforeClass
     public static void setup() throws ConfigurationException {
         Configuration properties = Utils.readProperties(PROPERTIES_LOCATION);
-     //   adminClient = AdminClient.create(Utils.getClientConfig(properties));
+        adminClient = AdminClient.create(Utils.getClientConfig(properties));
     }
 
     @Before
     @After
     public void cleanup() throws ExecutionException, InterruptedException {
-   //     deleteAllAcls();
+        deleteAllAcls();
     }
 
     @Test
