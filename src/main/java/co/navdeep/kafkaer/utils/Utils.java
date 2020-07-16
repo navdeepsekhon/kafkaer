@@ -5,6 +5,7 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringSubstitutor;
 import org.apache.kafka.clients.admin.Config;
 import org.apache.kafka.clients.admin.ConfigEntry;
@@ -16,8 +17,17 @@ import java.util.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class Utils {
-    private static final String PROPERTY_PREFIX = "kafkaer";
+    private static final String KAFKAER = "kafkaer";
+    private static final String KAFKAER_DOT = KAFKAER + ".";
+
     public static final String MAX_DELETE_CONFIRM_WAIT_CONFIG = "kafkaer.max.delete.confirm.wait";
+    public static final String SCHEMA_REGISTRY_URL_CONFIG = KAFKAER_DOT +  "schema.registry.url";
+
+    private static final String SCHEMA_REGISTRY_CONFIG_PREFIX = "schema.registry";
+    private static final String SCHEMA_REGISTRY_CONFIG_PREFIX_DOT = SCHEMA_REGISTRY_CONFIG_PREFIX + ".";
+    private static final String KAFKAER_SCHEMA_REGISTRY_CONFIG_PREFIX = KAFKAER_DOT + SCHEMA_REGISTRY_CONFIG_PREFIX;
+    private static final String KAFKAER_SCHEMA_REGISTRY_CONFIG_PREFIX_DOT = KAFKAER_SCHEMA_REGISTRY_CONFIG_PREFIX + ".";
+
     public static Configuration readProperties(String location) throws ConfigurationException {
         return new Configurations().properties(location);
     }
@@ -34,7 +44,13 @@ public class Utils {
 
     public static Properties getClientConfig(Configuration properties){
         Properties config = new Properties();
-        properties.getKeys(PROPERTY_PREFIX).forEachRemaining( key -> config.put(stripPropertyPrefix(key), properties.getString(key)));
+        properties.getKeys(KAFKAER).forEachRemaining(key -> config.put(replacePrefix(key, KAFKAER_DOT, null), properties.getString(key)));
+        return config;
+    }
+
+    public static Map<String, String> getSchemaRegistryConfigs(Configuration properties){
+        Map<String, String> config = new HashMap<>();
+        properties.getKeys(KAFKAER_SCHEMA_REGISTRY_CONFIG_PREFIX).forEachRemaining(key -> config.put(replacePrefix(key, KAFKAER_SCHEMA_REGISTRY_CONFIG_PREFIX_DOT, SCHEMA_REGISTRY_CONFIG_PREFIX_DOT), properties.getString(key)));
         return config;
     }
 
@@ -42,8 +58,9 @@ public class Utils {
         return properties.getInt(MAX_DELETE_CONFIRM_WAIT_CONFIG, 60);
     }
 
-    private static String stripPropertyPrefix(String key){
-        return key.substring(key.indexOf(PROPERTY_PREFIX) + PROPERTY_PREFIX.length() + 1);
+    private static String replacePrefix(String key, String prefix, String replaceWith){
+        String stripped = key.substring(key.indexOf(prefix) + prefix.length());
+        return StringUtils.isBlank(replaceWith) ? stripped : (replaceWith + stripped);
     }
 
     public static org.apache.kafka.clients.admin.Config configsAsKafkaConfig(Map<String, String> config){
@@ -60,5 +77,9 @@ public class Utils {
         configString = substitutor.replace(configString);
         ObjectMapper mapper = new ObjectMapper();
         return mapper.readValue(configString, co.navdeep.kafkaer.model.Config.class);
+    }
+
+    public static String getSchemaRegistryUrl(Configuration properties){
+        return properties.getString(SCHEMA_REGISTRY_URL_CONFIG);
     }
 }

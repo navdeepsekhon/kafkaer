@@ -4,9 +4,13 @@ import co.navdeep.kafkaer.model.Broker;
 import co.navdeep.kafkaer.model.Config;
 import co.navdeep.kafkaer.model.Topic;
 import co.navdeep.kafkaer.utils.Utils;
+import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient;
+import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient;
+import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
 import lombok.Data;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.acl.AclBinding;
@@ -16,10 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 @Data
@@ -27,6 +28,7 @@ public class Configurator {
     private Configuration properties;
     private Config config;
     private AdminClient adminClient;
+    private SchemaRegistryClient schemaRegistryClient;
 
     private static Logger logger = LoggerFactory.getLogger(Configurator.class);
 
@@ -34,33 +36,62 @@ public class Configurator {
         properties = Utils.readProperties(propertiesLocation);
         config = Utils.readConfig(configLocation, Utils.propertiesToMap(properties));
         adminClient = AdminClient.create(Utils.getClientConfig(properties));
+        initializeSchemaRegistryClient();
     }
 
     public Configurator(Configuration p, Config c){
         properties = p;
         config = c;
         adminClient = AdminClient.create(Utils.getClientConfig(properties));
+        initializeSchemaRegistryClient();
     }
 
-    public void wipeTopics(boolean confirmDelete) throws ExecutionException, InterruptedException {
+    private void initializeSchemaRegistryClient(){
+        String url = Utils.getSchemaRegistryUrl(properties);
+        if(StringUtils.isNotBlank(url)){
+            schemaRegistryClient = new CachedSchemaRegistryClient(url, 12384, Utils.getSchemaRegistryConfigs(properties));
+        }
+    }
+
+    @Deprecated
+    public void wipeTopics() throws ExecutionException, InterruptedException {
+        wipeTopics(false, false);
+    }
+
+    public void wipeTopics(boolean confirmDelete, boolean wipeSchema) throws ExecutionException, InterruptedException {
         logger.debug("Deleting topics");
         DeleteTopicsResult result = adminClient.deleteTopics(config.getAllTopicNames());
         for(String topic : result.values().keySet()){
             try {
                 logger.debug("Deleting topic: {}", topic);
                 result.values().get(topic).get();
+                if(wipeSchema) wipeSchema(topic);
                 if(confirmDelete) waitForDelete(topic);
-            } catch(ExecutionException e){
+            } catch(ExecutionException | IOException | RestClientException e){
                 if(e.getCause() instanceof UnknownTopicOrPartitionException){
                     logger.debug("Unable to delete topic {} because it does not exist.", topic);
                 } else {
-                    throw e;
+                    throw new ExecutionException(e);
                 }
             }
 
         }
     }
 
+    public void wipeSchema(String topicName) throws IOException, RestClientException {
+        if(schemaRegistryClient == null){
+            logger.warn("No schema registry configured. Set property [{}]", Utils.SCHEMA_REGISTRY_URL_CONFIG);
+            return;
+        }
+
+        Collection<String> currentSubjects = schemaRegistryClient.getAllSubjects();
+        for(String subject : currentSubjects){
+            if(StringUtils.contains(subject, topicName)){
+                logger.debug("Deleting subject [{}] from schema registry", subject);
+                schemaRegistryClient.deleteSubject(subject);
+            }
+        }
+    }
     private void waitForDelete(String topicName) throws ExecutionException, InterruptedException {
         int maxWaitTime = Utils.getMaxDeleteConfirmWaitTime(properties);
         int maxTries = Math.floorDiv(maxWaitTime, 5);

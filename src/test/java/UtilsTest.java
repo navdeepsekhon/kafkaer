@@ -1,5 +1,6 @@
 import co.navdeep.kafkaer.utils.Utils;
 import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.Config;
@@ -78,5 +79,22 @@ public class UtilsTest {
     public void readConfigWithoutDescriptinoTest() throws IOException {
         co.navdeep.kafkaer.model.Config config = Utils.readConfig("src/test/resources/kafka-config.json", Collections.singletonMap("topic.suffix", "t"));
         Assert.assertNull(config.getTopics().get(0).getDescription());
+    }
+
+    @Test
+    public void getSchemaRegistryUrlConfigTest() {
+        Configuration p = new PropertiesConfiguration();
+        p.addProperty(Utils.SCHEMA_REGISTRY_URL_CONFIG, "url");
+        Assert.assertEquals("url", Utils.getSchemaRegistryUrl(p));
+    }
+
+    @Test
+    public void getSchemaRegistryConfigsTest(){
+        Configuration p = new PropertiesConfiguration();
+        p.addProperty("kafkaer.schema.registry.url", "u");
+        p.addProperty("x.y", "x");
+        Map<String, String> configs = Utils.getSchemaRegistryConfigs(p);
+        Assert.assertEquals(1, configs.size());
+        Assert.assertEquals("u", configs.get("schema.registry.url"));
     }
 }
