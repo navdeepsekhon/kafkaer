@@ -28,10 +28,10 @@ public class App {
             throw new RuntimeException("Missing required arguments - propertiesLocation, configLocation");
         }
 
-        logger.debug("Input args: config: [{}] properties: [{}] wipe:[{}]", args.getConfig(), args.getProperties(), args.isWipe());
+        logger.debug("Input args: config: [{}] properties: [{}] wipe:[{}] confirm-delete: [{}]", args.getConfig(), args.getProperties(), args.isWipe(), args.isConfirmDelete());
         Configurator configurator = new Configurator(args.getProperties(), args.getConfig());
         if(args.isWipe())
-            configurator.wipeTopics();
+            configurator.wipeTopics(args.isConfirmDelete());
         else
             configurator.applyConfig();
     }

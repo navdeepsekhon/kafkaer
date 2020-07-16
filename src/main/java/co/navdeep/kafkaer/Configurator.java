@@ -42,13 +42,14 @@ public class Configurator {
         adminClient = AdminClient.create(Utils.getClientConfig(properties));
     }
 
-    public void wipeTopics() throws ExecutionException, InterruptedException {
+    public void wipeTopics(boolean confirmDelete) throws ExecutionException, InterruptedException {
         logger.debug("Deleting topics");
         DeleteTopicsResult result = adminClient.deleteTopics(config.getAllTopicNames());
         for(String topic : result.values().keySet()){
             try {
                 logger.debug("Deleting topic: {}", topic);
                 result.values().get(topic).get();
+                if(confirmDelete) waitForDelete(topic);
             } catch(ExecutionException e){
                 if(e.getCause() instanceof UnknownTopicOrPartitionException){
                     logger.debug("Unable to delete topic {} because it does not exist.", topic);
@@ -60,6 +61,26 @@ public class Configurator {
         }
     }
 
+    private void waitForDelete(String topicName) throws ExecutionException, InterruptedException {
+        int maxWaitTime = Utils.getMaxDeleteConfirmWaitTime(properties);
+        int maxTries = Math.floorDiv(maxWaitTime, 5);
+        int tries = 0;
+        logger.debug("Confirming topic [{}] was deleted from all brokers. Will wait for max [{}]s", topicName, maxWaitTime);
+        while(tries < maxTries){
+            DescribeTopicsResult result = adminClient.describeTopics(Collections.singletonList(topicName));
+            try{
+                result.values().get(topicName).get();
+            } catch(Exception e){
+                if(e.getCause() instanceof UnknownTopicOrPartitionException){
+                    logger.debug("Confirmed: topic [{}] was deleted.", topicName);
+                    return;
+                }
+                throw e;
+            }
+            Thread.sleep(5000);
+            tries++;
+        }
+    }
     public void applyConfig() throws ExecutionException, InterruptedException {
         configureTopics();
         configureBrokers();

@@ -264,7 +264,7 @@ public class ConfiguratorTest {
         sleep();
         compareWithKafkaTopic(topic);
 
-        configurator.wipeTopics();
+        configurator.wipeTopics(true);
 
         Assert.assertFalse(adminClient.listTopics().names().get().contains(topic.getName()));
     }
@@ -279,7 +279,7 @@ public class ConfiguratorTest {
         Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
 
         try {
-            configurator.wipeTopics();
+            configurator.wipeTopics(true);
         } catch(Exception e){
             Assert.fail();
             e.printStackTrace();

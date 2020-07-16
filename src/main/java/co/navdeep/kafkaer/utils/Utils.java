@@ -17,7 +17,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class Utils {
     private static final String PROPERTY_PREFIX = "kafkaer";
-
+    public static final String MAX_DELETE_CONFIRM_WAIT_CONFIG = "kafkaer.max.delete.confirm.wait";
     public static Configuration readProperties(String location) throws ConfigurationException {
         return new Configurations().properties(location);
     }
@@ -36,6 +36,10 @@ public class Utils {
         Properties config = new Properties();
         properties.getKeys(PROPERTY_PREFIX).forEachRemaining( key -> config.put(stripPropertyPrefix(key), properties.getString(key)));
         return config;
+    }
+
+    public static int getMaxDeleteConfirmWaitTime(Configuration properties){
+        return properties.getInt(MAX_DELETE_CONFIRM_WAIT_CONFIG, 60);
     }
 
     private static String stripPropertyPrefix(String key){
