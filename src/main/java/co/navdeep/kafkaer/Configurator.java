@@ -65,13 +65,21 @@ public class Configurator {
             try {
                 logger.debug("Deleting topic: {}", topic);
                 result.values().get(topic).get();
-                if(wipeSchema) wipeSchema(topic);
                 if(confirmDelete) waitForDelete(topic);
-            } catch(ExecutionException | IOException | RestClientException e){
+            } catch(ExecutionException e){
                 if(e.getCause() instanceof UnknownTopicOrPartitionException){
                     logger.debug("Unable to delete topic {} because it does not exist.", topic);
                 } else {
                     throw new ExecutionException(e);
+                }
+            } finally {
+                if(wipeSchema) {
+                    try {
+                        wipeSchema(topic);
+                    } catch (IOException | RestClientException e) {
+                        logger.error("Error deleting schema for [{}]", topic);
+                        throw new ExecutionException(e);
+                    }
                 }
             }
 

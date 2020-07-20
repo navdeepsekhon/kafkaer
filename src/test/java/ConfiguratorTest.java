@@ -302,6 +302,32 @@ public class ConfiguratorTest {
     }
 
     @Test
+    public void testWipeWithSchemaWipeTopicDoesNotExist() throws ConfigurationException, ExecutionException, InterruptedException, IOException, RestClientException {
+        Config config = new Config();
+        String topicName = UUID.randomUUID().toString();
+        Topic topic = new Topic(topicName, 1, (short)1);
+        config.getTopics().add(topic);
+
+        Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
+
+        SchemaRegistryClient mock = Mockito.mock(SchemaRegistryClient.class);
+        configurator.setSchemaRegistryClient(mock);
+
+        String subjectName = topicName + "-value";
+        Mockito.when(mock.getAllSubjects()).thenReturn(Collections.singletonList(subjectName));
+        Mockito.when(mock.deleteSubject(subjectName)).thenReturn(Collections.singletonList(1));
+
+
+        configurator.wipeTopics(true, true);
+
+        //Topic did not exist, it should still delete schema
+        Mockito.verify(mock).getAllSubjects();
+        Mockito.verify(mock).deleteSubject(ArgumentMatchers.eq(subjectName));
+
+        Assert.assertFalse(adminClient.listTopics().names().get().contains(topic.getName()));
+    }
+
+    @Test
     public void testNonExistingTopicWipeNoException() throws ConfigurationException {
         Config config = new Config();
         String topicName = UUID.randomUUID().toString();
