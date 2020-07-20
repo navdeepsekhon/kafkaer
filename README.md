@@ -58,6 +58,7 @@ And use it:
 Configurator configurator = new Configurator("src/main/resources/your.properties", "src/main/resources/kafka-config.json");
 configurator.applyConfig();
 ```
+###### The jar published to maven is also an executable.
 
 # kafka-config.json
 ## Example:
