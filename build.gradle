@@ -6,7 +6,7 @@ apply plugin: 'maven'
 apply plugin: 'signing'
 
 group 'co.navdeep'
-version '1.4'
+version '1.4.1'
 archivesBaseName = "kafkaer"
 
 sourceCompatibility = 1.8
@@ -58,6 +58,15 @@ artifacts {
     archives javadocJar, sourcesJar
 }
 
+jar {
+    manifest {
+        attributes 'Implementation-Title': 'kafkaer',
+                'Implementation-Version': version,
+                'Main-Class': 'co.navdeep.kafkaer.App'
+    }
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+}
+
 signing {
     sign configurations.archives
 }
@@ -85,7 +94,7 @@ uploadArchives {
             pom.project {
                 name 'kafkaer'
                 packaging 'jar'
-                description 'Deployment automation utility for apache kafka. Automate kafka cluster configurations for topics, brokers, ACLs'
+                description 'Deployment automation utility for apache kafka. Automate kafka cluster configurations for topics, brokers, ACLs. This jar can be used as an executable as well as a maven dependecy'
                 url 'https://github.com/navdeepsekhon/kafkaer'
 
                 scm {
