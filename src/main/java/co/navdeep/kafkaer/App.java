@@ -28,8 +28,9 @@ public class App {
             throw new RuntimeException("Missing required arguments - propertiesLocation, configLocation");
         }
 
-        logger.debug("Input args: config: [{}] properties: [{}] wipe:[{}] confirm-delete: [{}], wipe-schema: [{}]", args.getConfig(), args.getProperties(), args.isWipe(), args.isConfirmDelete(), args.isWipeSchemas());
+        logger.debug("Input args: config: [{}] properties: [{}] wipe:[{}] confirm-delete: [{}], wipe-schema: [{}], preserve-partition-count: [{}]", args.getConfig(), args.getProperties(), args.isWipe(), args.isConfirmDelete(), args.isWipeSchemas(), args.isPreservePartitionCount());
         Configurator configurator = new Configurator(args.getProperties(), args.getConfig());
+        configurator.setPreservePartitionCount(args.isPreservePartitionCount());
         if(args.isWipe())
             configurator.wipeTopics(args.isConfirmDelete(), args.isWipeSchemas());
         else
