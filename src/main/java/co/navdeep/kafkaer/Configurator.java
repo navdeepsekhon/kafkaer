@@ -29,6 +29,7 @@ public class Configurator {
     private Config config;
     private AdminClient adminClient;
     private SchemaRegistryClient schemaRegistryClient;
+    private boolean preservePartitionCount;
 
     private static Logger logger = LoggerFactory.getLogger(Configurator.class);
 
@@ -194,7 +195,21 @@ public class Configurator {
             throw new RuntimeException(e);
         }
     }
+
     private void handleTopicPartitionsUpdate(TopicDescription current, Topic topic) throws InterruptedException {
+        if(preservePartitionCount) logPartitionDiff(current, topic);
+        else updatePartitions(current, topic);
+    }
+
+    private void logPartitionDiff(TopicDescription current, Topic topic){
+        if(current.partitions().size() < topic.getPartitions()){
+            logger.warn("Current partition count for topic {} is [{}], partition count in config is [{}]. Execute without --preserve-partition-count to make this partition update.", topic.getName(), current.partitions().size(), topic.getPartitions());
+
+        } else if(current.partitions().size() > topic.getPartitions()){
+            logger.warn("Current partition count for topic {} is [{}], partition count in config is [{}].", topic.getName(), current.partitions().size(), topic.getPartitions());
+        }
+    }
+    private void updatePartitions(TopicDescription current, Topic topic){
         try {
             if(current.partitions().size() < topic.getPartitions()){
                 logger.debug("Updating partition count for topic {} from [{}] to [{}]", topic.getName(), current.partitions().size(), topic.getPartitions());
@@ -203,7 +218,7 @@ public class Configurator {
             } else if(current.partitions().size() > topic.getPartitions()){
                 throw new RuntimeException("Can not reduce number of partitions for topic [" + topic.getName() + "] from current:" + current.partitions().size() + " to " + topic.getPartitions());
             }
-        } catch(ExecutionException e){
+        } catch(ExecutionException | InterruptedException e){
             throw new RuntimeException(e);
         }
     }

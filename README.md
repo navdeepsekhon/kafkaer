@@ -14,6 +14,7 @@
  - [Delete created topics (--wipe)](#delete-created-topics)
  - [Delete schemas from schema registry (--wipe-schemas)](#delete-schemas)
  - [Debug (--debug)](#debug)
+ - [Preserve Partition Count (--preserve-partition-count)](#preserve-partition-count)
  - [Contributions](#contributions)
 
  
@@ -122,6 +123,8 @@ If the partitions listed in config are less than the existing - an exception wil
 
 If they are same - nothing.
 
+If flag `--preserve-partition-count` is used, partitions will not be updated.
+
 ### All other configs:
 All other configs will be updated to the new values from config.
 
@@ -215,6 +218,10 @@ kafkaer.schema.registry.ssl.truststore.location=...
 # Debug
 
 Use flag `--debug` for detailed logging
+
+# Preserve Partition Count
+
+If a topic already exists and it's partition count is different from what is defined in the config, kafkaer will try update the partitions as described above. In order to ignore the partition count and keep the existing partitions, `--preserve-partition-count` flag can be used. When used, the difference is partition count will only be logged.
 
 # Contributions
 Merge requests welcome. Please create an issue with change details and link it to your merge request.

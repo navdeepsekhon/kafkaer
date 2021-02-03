@@ -141,6 +141,29 @@ public class ConfiguratorTest {
     }
 
     @Test
+    public void testPreservePartitions() throws ExecutionException, InterruptedException, ConfigurationException {
+        Config config = new Config();
+        String topicName = UUID.randomUUID().toString();
+        Topic topic = new Topic(topicName, 1, (short)1);
+        config.getTopics().add(topic);
+
+        Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
+        configurator.setPreservePartitionCount(true);
+        configurator.applyConfig();
+
+        sleep();
+        compareWithKafkaTopic(topic);
+
+        //Increase the partitions and apply config
+        topic.setPartitions(2);
+        configurator.applyConfig();
+
+        //Still expect 1 partition
+        topic.setPartitions(1);
+        compareWithKafkaTopic(topic);
+    }
+
+    @Test
     public void testUpdateExistingTopicConfig() throws ConfigurationException, ExecutionException, InterruptedException {
         Config config = new Config();
         Topic topic = new Topic(UUID.randomUUID().toString(), 1, (short)1);

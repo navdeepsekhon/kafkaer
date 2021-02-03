@@ -27,6 +27,9 @@ public class Args {
     @Option(name="--confirm-delete", usage="Used with --wipe. Will wait for all brokers to sync up to ensure topic is deleted from all. Default max wait 60s. Configure using " + Utils.MAX_DELETE_CONFIRM_WAIT_CONFIG, handler = BooleanOptionHandler.class)
     boolean confirmDelete;
 
+    @Option(name="--preserve-partition-count", usage="If a topic already exists and it's partition count is different from config, the partition count will not be changed.", handler = BooleanOptionHandler.class)
+    boolean preservePartitionCount;
+
     @Option(name="--help", aliases= "-h", help = true, usage="list usage", handler =  BooleanOptionHandler.class)
     boolean help;
 
