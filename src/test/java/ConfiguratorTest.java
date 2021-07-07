@@ -137,6 +137,7 @@ public class ConfiguratorTest {
         topic.setPartitions(2);
         configurator.applyConfig();
 
+        sleep();
         compareWithKafkaTopic(topic);
     }
 
