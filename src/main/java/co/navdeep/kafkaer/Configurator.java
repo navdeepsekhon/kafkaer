@@ -122,9 +122,30 @@ public class Configurator {
         }
     }
     public void applyConfig() throws ExecutionException, InterruptedException {
+        validate();
         configureTopics();
         configureBrokers();
         configureAcls();
+    }
+
+    public void validate(){
+        validateDuplicateTopics();
+    }
+
+    public void validateDuplicateTopics(){
+        Set<String> seen = new HashSet<>();
+        Set<String> duplicates = new HashSet<>();
+        for(String t : config.getAllTopicNames()){
+            if(seen.contains(t)){
+                duplicates.add(t);
+            }
+            seen.add(t);
+        }
+
+        if(!duplicates.isEmpty()){
+            logger.error("These topics are defined multiple times: {}", duplicates);
+            throw new RuntimeException("Duplicate topic definitions " + duplicates);
+        }
     }
 
     public void configureAcls() throws ExecutionException, InterruptedException {

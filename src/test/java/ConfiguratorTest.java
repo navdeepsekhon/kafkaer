@@ -137,6 +137,7 @@ public class ConfiguratorTest {
         topic.setPartitions(2);
         configurator.applyConfig();
 
+        sleep();
         compareWithKafkaTopic(topic);
     }
 
@@ -380,6 +381,20 @@ public class ConfiguratorTest {
 
         Mockito.verify(mock).getAllSubjects();
         Mockito.verify(mock).deleteSubject(ArgumentMatchers.eq("x-value"));
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testDuplicateTopicValidation() throws ExecutionException, InterruptedException, ConfigurationException {
+        Config config = new Config();
+        String topicName = UUID.randomUUID().toString();
+        Topic topic = new Topic(topicName, 1, (short)1);
+        Topic topic2 = new Topic(topicName, 2, (short)1);
+        config.getTopics().add(topic);
+        config.getTopics().add(topic2);
+
+        Configurator configurator = new Configurator(Utils.readProperties(PROPERTIES_LOCATION), config);
+        configurator.applyConfig();
+
     }
 
     private void compareWithKafkaTopic(Topic topic) throws ExecutionException, InterruptedException {
