@@ -17,17 +17,17 @@ repositories {
 
 dependencies {
     implementation "org.apache.kafka:kafka-clients:2.1.0"
-    implementation "com.fasterxml.jackson.core:jackson-databind:2.13.4.1"
-    implementation "org.apache.commons:commons-text:1.10"
-    implementation "commons-io:commons-io:2.11"
+    implementation "com.fasterxml.jackson.core:jackson-databind:2.13.4"
+    implementation "org.apache.commons:commons-text:1.10.0"
+    implementation "commons-io:commons-io:2.11.0"
     implementation "org.apache.commons:commons-configuration2:2.8.0"
     implementation "commons-beanutils:commons-beanutils:1.9.4"
     implementation "args4j:args4j:2.33"
     implementation "org.slf4j:slf4j-simple:1.7.30"
     implementation "io.confluent:kafka-schema-registry-client:5.5.9"
 
-    compileOnly "org.projectlombok:lombok:1.18.6"
-    annotationProcessor "org.projectlombok:lombok:1.18.6"
+    compileOnly "org.projectlombok:lombok:1.18.20"
+    annotationProcessor "org.projectlombok:lombok:1.18.20"
 
     testImplementation "junit:junit:4.12"
     testImplementation "org.mockito:mockito-core:3.4.0"
@@ -65,67 +65,4 @@ jar {
                 'Main-Class': 'co.navdeep.kafkaer.App'
     }
     from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
-}
-
-signing {
-    sign configurations.archives
-}
-
-def usr = ''
-def pwd = ''
-if(project.hasProperty("nexusUsername")){
-    usr = nexusUsername
-    pwd = nexusPassword
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-
-            pom {
-                name = 'kafkaer'
-                packaging = 'jar'
-                description = 'Deployment automation utility for apache kafka. Automate kafka cluster configurations for topics, brokers, ACLs. This jar can be used as an executable as well as a maven dependecy'
-                url = 'https://github.com/navdeepsekhon/kafkaer'
-
-                scm {
-                    connection = 'git@github.com:navdeepsekhon/kafkaer.git'
-                    developerConnection = 'git@github.com:navdeepsekhon/kafkaer.git'
-                    url = 'https://github.com/navdeepsekhon/kafkaer'
-                }
-
-                licenses {
-                    license {
-                        name = 'The Apache License, Version 2.0'
-                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                    }
-                }
-
-                developers {
-                    developer {
-                        id = 'navdeep'
-                        name = 'Navdeep Sekhon'
-                        email = 'hi@navdeep.co'
-                    }
-                }
-            }
-        }
-    }
-
-
-    repositories {
-        maven {
-            // change URLs to point to your repos, e.g. http://my.org/repo
-            url = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-            credentials{
-                username = usr
-                password= pwd
-            }
-        }
-    }
-}
-
-signing {
-    sign publishing.publications.mavenJava
 }
