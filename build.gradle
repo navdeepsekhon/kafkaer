@@ -66,3 +66,66 @@ jar {
     }
     from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
 }
+
+signing {
+    sign configurations.archives
+}
+
+def usr = ''
+def pwd = ''
+if(project.hasProperty("nexusUsername")){
+    usr = nexusUsername
+    pwd = nexusPassword
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            pom {
+                name = 'kafkaer'
+                packaging = 'jar'
+                description = 'Deployment automation utility for apache kafka. Automate kafka cluster configurations for topics, brokers, ACLs. This jar can be used as an executable as well as a maven dependecy'
+                url = 'https://github.com/navdeepsekhon/kafkaer'
+
+                scm {
+                    connection = 'git@github.com:navdeepsekhon/kafkaer.git'
+                    developerConnection = 'git@github.com:navdeepsekhon/kafkaer.git'
+                    url = 'https://github.com/navdeepsekhon/kafkaer'
+                }
+
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = 'navdeep'
+                        name = 'Navdeep Sekhon'
+                        email = 'hi@navdeep.co'
+                    }
+                }
+            }
+        }
+    }
+
+
+    repositories {
+        maven {
+            // change URLs to point to your repos, e.g. http://my.org/repo
+            url = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+            credentials{
+                username = usr
+                password= pwd
+            }
+        }
+    }
+}
+
+signing {
+    sign publishing.publications.mavenJava
+}
