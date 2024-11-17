@@ -25,9 +25,9 @@ dependencies {
     implementation "args4j:args4j:2.33"
     implementation "org.slf4j:slf4j-simple:1.7.30"
     implementation "io.confluent:kafka-schema-registry-client:5.5.9"
-    implementation "org.apache.commons:commons-compress:1.26"
+    implementation "org.apache.commons:commons-compress:1.26.1"
     implementation "com.fasterxml.jackson.core:jackson-databind:2.16.1"
-    implementation "com.google.guava:guava:32.0.1"
+    implementation "com.google.guava:guava:32.0.1-jre"
     implementation "org.apache.avro:avro:1.11.3"
 
     compileOnly "org.projectlombok:lombok:1.18.20"
